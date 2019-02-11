@@ -57,7 +57,7 @@ module controller(input logic        clk,
 
 		//key 3 down increments value
 		if(~KEY[3] & prev_keys_up[3])
-			a <= a - 1;
+			a <= a + 1;
 
 		//key 2 down increments value
 		if(~KEY[2] & prev_keys_up[2])
