@@ -33,18 +33,48 @@ module lab1( input logic        CLOCK_50,
   
 endmodule
 
+
+/**
+ * Updates an internal tracker of keys pressed last cycle
+ * in order to determine keys pressed down this cycle. Updates
+ * the output values only on the negative clock cycle
+ * in order to mitigate keybounce, double-updating, etc.
+ */
 module controller(input logic        clk,
 		  input logic [3:0]  KEY,
 		  input logic [7:0]  dout,
-		  output logic [3:0] a,
-		  output logic [7:0] din,
-		  output logic 	     we);
+		  output reg [3:0] a,
+		  output reg [7:0] din,
+		  output reg 	     we);
 
-   // Replace these with your code
-   assign a = KEY;
-   assign din = {KEY, ~KEY};
-   assign we = 1'b1;
-   
+	reg [3:0] prev_keys_up;
+	
+	//use last cycles data to figure out keys down this cycle
+	always_ff @(negedge clk)
+	begin
+
+		we <= |(prev_keys_up & ~KEY);
+
+		//key 3 down increments value
+		if(~KEY[3] & prev_keys_up[3])
+			a <= a - 1;
+
+		//key 2 down increments value
+		if(~KEY[2] & prev_keys_up[2])
+			a <= a - 1;
+
+		//key 1 increments val
+		if(~KEY[1] & prev_keys_up[1])
+			din <= dout + 1;
+		
+		//key 0 decrements val
+		if(~KEY[0] & prev_keys_up[0])
+			din <= dout - 1; 
+
+		//keep track of last cycles signals
+		prev_keys_up <= KEY;
+	end
+	
 endmodule
 		  
 module hex7seg(input logic [3:0] a,
