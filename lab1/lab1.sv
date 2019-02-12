@@ -2,8 +2,8 @@
 //
 // Spring 2019
 //
-// By: <your names here>
-// Uni: <your unis here>
+// By: Alan Armero, Cansu Cabuk, Daniel Mesko
+// Uni: aa3938, cc4455, dpm2153
 
 module lab1( input logic        CLOCK_50,
 	     
@@ -43,9 +43,9 @@ endmodule
 module controller(input logic        clk,
 		  input logic [3:0]  KEY,
 		  input logic [7:0]  dout,
-		  output reg [3:0] a,
-		  output reg [7:0] din,
-		  output reg 	     we);
+		  output logic [3:0] a,
+		  output logic [7:0] din,
+		  output logic 	     we);
 
 	reg [3:0] prev_keys_up;
 	
@@ -53,7 +53,7 @@ module controller(input logic        clk,
 	always_ff @(negedge clk)
 	begin
 
-		we <= |(prev_keys_up & ~KEY);
+		we <= (~KEY[1]) | (~KEY[0]);
 
 		//key 3 down increments value
 		if(~KEY[3] & prev_keys_up[3])
