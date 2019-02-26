@@ -11,7 +11,6 @@ extern int fbopen(void);
 extern void fbputchar(char, int, int);
 extern void fbputs(const char *, int, int);
 
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -32,14 +31,20 @@ unsigned char *framebuffer;
 static unsigned char font[];
 
 
-const static char USB_CODES[] = 
-	{ 0, 0, 0, 0 , 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-		'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2',
-	 	'3', '4', '5', '6', '7', '8', '9', '0', '\n', 0, 0, 0, ' ', '-', '=', '[',
-	 ']', '\\', 0 /*tilda?*/, ';', '\'', '`', ',', '.', '/' };
+struct ascii 
+{
+		char lower;
+		char upper;
+};
 
-
-
+const static struct ascii USB_CODES[] = 
+	{ {0,0}, {0,0}, {0,0}, {0,0}, {'a','A'}, {'b','B'}, {'c','C'}, {'d','D'}, {'e','E'}, {'f','F'}, {'g','G'}, {'h','H'}, 
+					{'i','I'}, {'j', 'J'}, {'k','K'}, {'l','L'}, {'m','M'},
+					{'n','N'}, {'o','O'}, {'p','P'}, {'q','Q'}, {'r','R'}, {'s', 'S'}, {'t','T'}, {'u','U'}, {'v','V'}, {'w','W'},
+					{	'x','X'}, {'y','Y'}, {'z','Z'}, {'1','!'}, {'2','@'},
+				 	{'3','#'}, {'4','$'}, {'5','%'}, {'6','^'}, {'7','&'}, {'8','*'}, {'9','('}, {'0',')'}, {'\n','\n'}, {0,0}, {0,0},
+					{0,0}, {' ',' '}, {'-','_'}, { '=','+'}, {'[','{'}, { ']','}'}, {'\\', '|'}, {0,0}, {';',':'}, {'\'','"'}, 
+					{'`', '~'}, {',','<'}, {'.','>'}, {'/', '?'} };
 
 
 #endif
