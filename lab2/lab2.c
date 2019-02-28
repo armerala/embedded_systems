@@ -44,14 +44,25 @@ pthread_t network_thread;
 pthread_mutex_t sock_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *network_thread_f(void *);
 
+uint8_t prev_key = 0x00;
+uint8_t cur_key;
 
 // converts USB codes / modifiers to ASCII character
 char convert_usb(struct usb_keyboard_packet packet)
 {
-				if ((packet.keycode[0] <= 0x03) || packet.keycode[0] > sizeof(USB_CODES)-1)
+				if ( (prev_key != packet.keycode[0]) && (prev_key != 0x00))
+								cur_key = packet.keycode[0];
+				else if (prev_key == packet.keycode[0])
+								cur_key = packet.keycode[1];
+				else
+								cur_key = packet.keycode[0];
+				
+				prev_key = cur_key;
+
+				if ((cur_key <= 0x03) || cur_key > sizeof(USB_CODES)-1)
 								return 0;
 
-				struct ascii ch = USB_CODES[packet.keycode[0]];
+				struct ascii ch = USB_CODES[cur_key];
 				if ((packet.modifiers == 0x02) || (packet.modifiers == 0x20))
 								return ch.upper;
 				else 
@@ -137,7 +148,7 @@ int main()
 				memset(framebuffer, 0, fb_finfo.smem_len);
 
 
-				/* Draw rows of asterisks across the top and bottom of the screen */
+			/* Draw rows of asterisks across the top and bottom of the screen */
 				for (col = 0 ; col < 64 ; col++) {
 								fbputchar('*', 0, col);
 								fbputchar('*', 23, col);
@@ -178,8 +189,8 @@ int main()
 				}
 
 				// TODO: Maybe remove?? (nonblocking flag set for socket)
-				int flags = fcntl(sockfd, F_GETFL, 0);
-				fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+//				int flags = fcntl(sockfd, F_GETFL, 0);
+//				fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
 
 				/* Start the network thread */
 				pthread_create(&network_thread, NULL, network_thread_f, NULL);
@@ -189,19 +200,31 @@ int main()
 				int cursor_pos = 0;
 				char buf[512];
 
+
 				/* Look for and handle keypresses */
 				for (;;) {
 
-								// TODO:?? Simulatenous keypress issue..previous key registered again before the next key registered...
-			
+								int window_pos = cursor_pos % 128;
+  							int row_pos = window_pos / 64;
+								int col_pos = window_pos % 64;
+		
+								fbputchar('_', row_pos + 21, col_pos);
 								// wait for key press
 								libusb_interrupt_transfer(keyboard, endpoint_address,
 																(unsigned char *) &packet, sizeof(packet),
 																&transferred, 0);
 								if (transferred == sizeof(packet)) {
-												sprintf(keystate, "%02x %02x %02x", packet.modifiers, packet.keycode[0],
+												sprintf(keystate, "%02x %02x %02x_", packet.modifiers, packet.keycode[0],
 																				packet.keycode[1]);
 												printf("%s\n", keystate);
+
+												
+//												if ((prev_key != packet.keycode[0]) && (prev_key != 0x00))
+//																cur_key = packet.keycode[0];
+//												else if ((prev_key != packet.keycode[1]) && (prev_key != 0x00))
+//																cur_key = packet.keycode[1];
+//												else
+//																cur_key = packet.keycode[0];
 
 												if (packet.keycode[0] == 0x29) { /* ESC pressed */
 																break;
@@ -218,13 +241,18 @@ int main()
 
 												// catch left and right arrow keys
 												if (packet.keycode[0] == 0x50) {
-																if (cursor_pos != 0)
+																if (cursor_pos != 0) {
+																				char replace = (cursor_pos == buf_len) ? ' ' : buf[cursor_pos];
+																				fbputchar(replace, row_pos + 21, col_pos);
 																				cursor_pos--;
+																}
 																continue;
 												}
 												if (packet.keycode[0] == 0x4F) {
-																if (cursor_pos != buf_len)
+																if (cursor_pos != buf_len) {
+																				fbputchar(buf[cursor_pos], row_pos + 21, col_pos);
 																				cursor_pos++;
+																}
 																continue;
 												}
 
@@ -237,20 +265,22 @@ int main()
 												if (ch == '\n') {
 																if (buf_len == 0)
 																				continue;
-																buf[buf_len] = 0;
-																buf_len++;
-																char *p = buf;
-																int n;
+																buf[buf_len++] = '\r';
+																buf[buf_len++] = '\n';
+//																buf[buf_len++] = 0;
+//																char *p = buf;
+//																int n;
 
-																pthread_mutex_lock(&sock_mutex);
-																while ( (n = write(sockfd, p, buf_len)) > 0) {
-																				p += n;
-																				buf_len -= n;
-																}
-																pthread_mutex_unlock(&sock_mutex);
+																	write(sockfd, buf, buf_len);
+//																while ( (n = write(sockfd, p, buf_len)) > 0) {
+//																				p += n;
+//																				buf_len -= n;
+//																}
 
+																printf("I just sent:\n    %s\n", buf);
 																buf_len = 0;
 																cursor_pos = 0;
+																memset(buf, 0, sizeof(buf));
 
 																// clear user window
 																int col;
@@ -281,21 +311,39 @@ void *network_thread_f(void *ignored)
 {
 				char recvBuf[BUFFER_SIZE];
 				int n;
-				int row = 8;
+				int row = 6;
 
 				/* Receive data */
 				for (;;) {
-								pthread_mutex_lock(&sock_mutex);
 								while ( (n = read(sockfd, &recvBuf, BUFFER_SIZE - 1)) > 0 ) {
-												recvBuf[n] = '\0';
+												recvBuf[n] = 0;
 												printf("%s", recvBuf);
+												
+												char *pos;
 												fbputs(recvBuf, row, 0);
 												row++;
+												if (row > 18) {
+																int col;
+																for (col = 0; col < 64; col++) {
+																		fbputchar(' ', 6, col);
+																		fbputchar(' ', 7, col);
+																		fbputchar(' ', 8, col);
+																		fbputchar(' ', 9, col);
+																		fbputchar(' ', 10, col);
+																		fbputchar(' ', 11, col);
+																		fbputchar(' ', 12, col);
+																		fbputchar(' ', 13, col);
+																		fbputchar(' ', 14, col);
+																		fbputchar(' ', 15, col);
+																		fbputchar(' ', 16, col);
+																		fbputchar(' ', 17, col);
+																		fbputchar(' ', 18, col);
+																}
+																row = 6;
+												}
 								}
-								pthread_mutex_unlock(&sock_mutex);
 				}
 
-				printf("did you termintae??\n");
 				return NULL;
 }
 
