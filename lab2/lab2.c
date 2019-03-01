@@ -364,4 +364,3 @@ void *network_thread_f(void *ignored)
 
 		return NULL;
 }
-
