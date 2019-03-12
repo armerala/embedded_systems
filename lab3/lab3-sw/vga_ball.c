@@ -39,6 +39,8 @@
 #define BG_RED(x) (x)
 #define BG_GREEN(x) ((x)+1)
 #define BG_BLUE(x) ((x)+2)
+#define BALL_X(x)  ((x)+3)
+#define BALL_Y(x)  ((x)+4)
 
 /*
  * Information about our device
@@ -47,6 +49,7 @@ struct vga_ball_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
         vga_ball_color_t background;
+		vga_ball_position position;
 } dev;
 
 /*
@@ -59,6 +62,13 @@ static void write_background(vga_ball_color_t *background)
 	iowrite8(background->green, BG_GREEN(dev.virtbase) );
 	iowrite8(background->blue, BG_BLUE(dev.virtbase) );
 	dev.background = *background;
+}
+
+static void write_ball(vga_ball_position *position)
+{
+	iowrite8(position->x, BALL_X(dev.virtbase) );
+	iowrite8(position->y, BALL_Y(dev.virtbase) );
+	dev.position = *position;
 }
 
 /*
@@ -84,6 +94,22 @@ static long vga_ball_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 				 sizeof(vga_ball_arg_t)))
 			return -EACCES;
 		break;
+
+	case VGA_BALL_WRITE_BALL:
+		vla.position = dev.position;
+		if (copy_from_user(&vla, (vga_ball_arg_t *) arg,
+			   sizeof(vga_ball_arg_t)))
+			return -EACCES;
+		write_ball(&vla.position);
+		break;
+
+	case VGA_BALL_READ_BALL:
+	  	vla.position = dev.position;
+		if (copy_to_user((vga_ball_arg_t *) arg, &vla,
+				 sizeof(vga_ball_arg_t)))
+			return -EACCES;
+		break;
+
 
 	default:
 		return -EINVAL;

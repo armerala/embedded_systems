@@ -14,6 +14,8 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
 
 int vga_ball_fd;
 
@@ -39,6 +41,17 @@ void set_background_color(const vga_ball_color_t *c)
       return;
   }
 }
+
+void move_ball(const vga_ball_position *pos)
+{
+	vga_ball_arg_t vla;
+	vla.position = *pos;
+	if (ioctl(vga_ball_fd, VGA_BALL_WRITE_BALL, &vla)) {
+		perror("ioctl for ball position failed");
+		return;
+	}
+}
+
 
 int main()
 {
@@ -67,14 +80,34 @@ int main()
     return -1;
   }
 
-  printf("initial state: ");
-  print_background_color();
+  int dx,dy;
 
-  for (i = 0 ; i < 24 ; i++) {
-    set_background_color(&colors[i % COLORS ]);
-    print_background_color();
-    usleep(400000);
+  set_background_color(&colors[5]);
+  
+  vga_ball_position pos;
+
+  dx = rand() % 2 * 2 -1;
+  dy = rand() % 2 * 2 -1;
+
+  srand(time(NULL));
+
+  pos.x = (rand() % (15));
+  pos.y = (rand() % 14);
+ 
+  for (;;) {
+	pos.x += dx;
+	pos.y += dy;
+
+	if (pos.x < 0 || pos.x > 15)
+			dx *= -1;
+	if (pos.y < 0 || pos.y > 14)
+			dy *= -1;
+
+	move_ball(&pos);
+
+    usleep(30000);
   }
+
   
   printf("VGA BALL Userspace program terminating\n");
   return 0;
