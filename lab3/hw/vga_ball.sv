@@ -10,7 +10,7 @@ module vga_ball(input logic        clk,
 		input logic [7:0]  writedata,
 		input logic 	   write,
 		input 		   chipselect,
-		input logic [2:0]  address,
+		input logic [3:0]  address,
 
 		output logic [7:0] VGA_R, VGA_G, VGA_B,
 		output logic 	   VGA_CLK, VGA_HS, VGA_VS,
@@ -22,6 +22,8 @@ module vga_ball(input logic        clk,
 
    logic [7:0] 	   background_r, background_g, background_b;
 	
+   logic [7:0]	   ball_x, ball_y;
+
    vga_counters counters(.clk50(clk), .*);
 
    always_ff @(posedge clk)
@@ -34,13 +36,15 @@ module vga_ball(input logic        clk,
 	 3'h0 : background_r <= writedata;
 	 3'h1 : background_g <= writedata;
 	 3'h2 : background_b <= writedata;
+	 3'h3 : ball_x <= writedata;
+	 3'h4 : ball_y <= writedata;
        endcase
 
    always_comb begin
       {VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
       if (VGA_BLANK_n )
-	if (hcount[10:6] == 5'd3 &&
-	    vcount[9:5] == 5'd3)
+	if ((hcount[10:6] >= ball_x) && (hcount[10:6] < ball_x + 1'b1)  &&
+	    (vcount[9:5] >= ball_y) && (vcount[9:5] < ball_y + 1'b1))
 	  {VGA_R, VGA_G, VGA_B} = {8'hff, 8'hff, 8'hff};
 	else
 	  {VGA_R, VGA_G, VGA_B} =
