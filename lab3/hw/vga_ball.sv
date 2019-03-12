@@ -43,8 +43,8 @@ module vga_ball(input logic        clk,
    always_comb begin
       {VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
       if (VGA_BLANK_n )
-	if ((hcount[10:6] >= ball_x) && (hcount[10:6] < ball_x + 1'b1)  &&
-	    (vcount[9:5] >= ball_y) && (vcount[9:5] < ball_y + 1'b1))
+	if ((hcount[10:3] >= ball_x) && (hcount[10:3] < ball_x + 8)  &&
+	    (vcount[9:2] >= ball_y) && (vcount[9:2] < ball_y + 8))
 	  {VGA_R, VGA_G, VGA_B} = {8'hff, 8'hff, 8'hff};
 	else
 	  {VGA_R, VGA_G, VGA_B} =
