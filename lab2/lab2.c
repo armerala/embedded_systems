@@ -56,7 +56,7 @@ char convert_usb(struct usb_keyboard_packet packet)
 {
 		int i;
 		for (i = 0; i < sizeof(prev_keyset); i++) {
-				if (prev_keyset[i] != packet.keycode[i])
+				if (prev_keyset[i] != packet.keycode[i]) 
 						cur_key = packet.keycode[i];
 		}
 
