@@ -91,16 +91,16 @@ int main()
 
   srand(time(NULL));
 
-  pos.x = (rand() % (15));
-  pos.y = (rand() % 14);
+  pos.x = (rand() % (133));
+  pos.y = (rand() % 110);
  
   for (;;) {
 	pos.x += dx;
 	pos.y += dy;
 
-	if (pos.x < 0 || pos.x > 15)
+	if (pos.x < 2 || pos.x > 133)
 			dx *= -1;
-	if (pos.y < 0 || pos.y > 14)
+	if (pos.y < 2 || pos.y > 110)
 			dy *= -1;
 
 	move_ball(&pos);
