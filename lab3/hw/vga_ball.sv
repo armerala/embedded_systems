@@ -3,6 +3,12 @@
  *
  * Stephen A. Edwards
  * Columbia University
+ *
+ *
+ * 	Name / UNI
+ * 		Daniel Mesko / dpm2153
+ * 		Cansu Cabuk / cc4455
+ *   	Alan Armero / aa3938
  */
 
 module vga_ball(input logic        clk,
