@@ -98,14 +98,14 @@ int main()
 	pos.x += dx;
 	pos.y += dy;
 
-	if (pos.x < 2 || pos.x > 133)
+	if (pos.x < 6 || pos.x > 136)
 			dx *= -1;
-	if (pos.y < 2 || pos.y > 110)
+	if (pos.y < 6 || pos.y > 113)
 			dy *= -1;
 
 	move_ball(&pos);
 
-    usleep(30000);
+    usleep(20000);
   }
 
   
