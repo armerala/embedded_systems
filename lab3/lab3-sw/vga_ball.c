@@ -18,6 +18,14 @@
  * checkpatch.pl --file --no-tree vga_ball.c
  */
 
+
+/* Name/UNI:
+ *    Daniel Mesko / dpm2153
+ *    Cansu Cabuk / cc4455
+ *    Alan Armero / aa3938 
+ */
+
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/errno.h>

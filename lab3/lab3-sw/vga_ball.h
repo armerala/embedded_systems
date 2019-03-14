@@ -3,6 +3,14 @@
 
 #include <linux/ioctl.h>
 
+
+/* Name/UNI:
+ *    Daniel Mesko / dpm2153
+ *    Cansu Cabuk / cc4455
+ *    Alan Armero / aa3938 
+ */
+
+
 typedef struct {
 	unsigned char red, green, blue;
 } vga_ball_color_t;

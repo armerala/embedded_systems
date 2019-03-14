@@ -6,6 +6,14 @@
  * Columbia University
  */
 
+
+/* Name/UNI:
+ *    Daniel Mesko / dpm2153
+ *    Cansu Cabuk / cc4455
+ *    Alan Armero / aa3938 
+ */
+
+
 #include <stdio.h>
 #include "vga_ball.h"
 #include <sys/ioctl.h>
