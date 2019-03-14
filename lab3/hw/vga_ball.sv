@@ -3,6 +3,12 @@
  *
  * Stephen A. Edwards
  * Columbia University
+ *
+ *
+ * 	Name / UNI
+ * 		Daniel Mesko / dpm2153
+ * 		Cansu Cabuk / cc4455
+ *   	Alan Armero / aa3938
  */
 
 module vga_ball(input logic        clk,
@@ -43,8 +49,28 @@ module vga_ball(input logic        clk,
    always_comb begin
       {VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
       if (VGA_BLANK_n )
-	if ((hcount[10:3] >= ball_x) && (hcount[10:3] < ball_x + 8)  &&
-	    (vcount[9:2] >= ball_y) && (vcount[9:2] < ball_y + 8))
+	if ((((hcount[10:3] >= ball_x - 2 ) && (hcount[10:3] <= ball_x + 2)) && 
+			((vcount[9:2] >= ball_y - 2) && (vcount[9:2] <= ball_y + 2)) )  
+			||
+			( ((hcount[10:3] >= ball_x - 4) && (hcount[10:3] <= ball_x - 3)) &&
+			((vcount[9:2] >= ball_y - 2) && (vcount[9:2] <= ball_y + 2)) ) 
+			||
+			( ((hcount[10:3] >= ball_x + 3) && (hcount[10:3] <= ball_x + 4)) &&
+			((vcount[9:2] >= ball_y - 2) && (vcount[9:2] <= ball_y + 2)) ) 
+			||
+			( ((hcount[10:3] >= ball_x - 2) && (hcount[10:3] <= ball_x + 2)) &&
+			((vcount[9:2] >= ball_y - 4) && (vcount[9:2] <= ball_y - 3)) )
+			||
+			( ((hcount[10:3] >= ball_x - 2) && (hcount[10:3] <= ball_x + 2)) &&
+			((vcount[9:2] >= ball_y + 3) && (vcount[9:2] <= ball_y + 4 )) )
+			||
+			( ((hcount[10:3] == ball_x - 3) && (vcount[9:2] == ball_y + 3)) )
+			||
+			( ((hcount[10:3] == ball_x + 3) && (vcount[9:2] == ball_y + 3)) )
+			||
+			( ((hcount[10:3] == ball_x - 3) && (vcount[9:2] == ball_y - 3)) )
+			||
+			( ((hcount[10:3] == ball_x + 3) && (vcount[9:2] == ball_y - 3)) ))
 	  {VGA_R, VGA_G, VGA_B} = {8'hff, 8'hff, 8'hff};
 	else
 	  {VGA_R, VGA_G, VGA_B} =
