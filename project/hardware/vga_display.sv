@@ -11,7 +11,7 @@
  *   	Alan Armero / aa3938
  */
 
-module vga_ball(input logic        clk,
+module vga_display(input logic        clk,
 	        input logic 	   reset,
 		input logic [7:0]  writedata,
 		input logic 	   write,
