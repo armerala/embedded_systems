@@ -10,13 +10,14 @@ else
 	KERNEL_SOURCE := /usr/src/linux-headers-$(shell uname -r)
         PWD := $(shell pwd)
 
-default: module
+default: module test
 
 module:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} modules
 
 clean:
 	${MAKE} -C ${KERNEL_SOURCE} SUBDIRS=${PWD} clean
+	$(RM) test
 
 TARFILES = Makefile README vga_display.h vga_display.c
 TARFILE = lab3.tar.gz
