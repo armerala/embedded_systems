@@ -1,8 +1,21 @@
-strEEtfight: logic.o
-	gcc -g -Wall logic.o -o strEEtfight
+CC=gcc
+LDFLAGS=-pthread
+CFLAGS = -c -g -Wall
 
-logic.o: logic.c
-	gcc -c -g -Wall logic.c
+OBJS=main.o input.o scene.o
+
+strEEtfight: $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o strEEtfight
+
+main.o: main.c input.o scene.o
+	$(CC) -c -g -Wall main.c
+
+input.o: input.c
+	$(CC) $(CFLAGS) input.c
+
+scene.o: scene.c
+	$(CC) $(CFLAGS) scene.c
+
 
 .PHONY:clean
 clean:

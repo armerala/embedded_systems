@@ -1,9 +1,10 @@
+#include "input.h"
 
-pthread_t p1_input_t;
-pthread_mutex_t p1_input_lock;
+static pthread_t thread1;
+static pthread_mutex_t p1_input_lock;
 
-pthread_t p2_input_t;
-pthread_mutex_t p2_input_lock;
+static pthread_t thread2;
+static pthread_mutex_t p2_input_lock;
 
 static uint32_t p1_input_bitmask;
 static uint32_t p1_input_bitmask_prev;
@@ -14,6 +15,8 @@ static uint32_t p2_input_bitmask;
 static uint32_t p2_input_bitmask_prev;
 static uint32_t p2_input_bitmask_down;
 static uint32_t p2_input_bitmask_up;
+
+static void* handle_input(void* arg);
 
 /**
  * return 0 on success, anything else is failure
@@ -31,8 +34,8 @@ int init_input()
 
     int ret1, ret2;
 
-	ret1 = pthread_create(&thread_1, NULL, handle_input, &player1);
-	ret2 = pthread_create(&thread_2, NULL, handle_input, &player2);
+	ret1 = pthread_create(&thread1, NULL, handle_input, NULL);
+	ret2 = pthread_create(&thread2, NULL, handle_input, NULL);
 
     return (ret1==0 && ret2==0);
 }
@@ -54,8 +57,8 @@ void update_inputs()
     p2_input_bitmask_up = ~p2_input_bitmask & p2_input_bitmask_prev;
     p2_input_bitmask_prev = p2_input_bitmask;
 
-    pthread_mutex_lock(&p2_input_lock);
-    pthread_mutex_lock(&p1_input_lock);
+    pthread_mutex_unlock(&p2_input_lock);
+    pthread_mutex_unlock(&p1_input_lock);
 }
 
 /**
