@@ -33,13 +33,13 @@ int main()
   vga_display_arg_t vla[2];
   vla[0].x = 3;
   vla[0].y = 10;
-  vla[0].spnum = 0;
+  vla[0].spnum = 1;
   vla[0].pbit = 0;
 
 
   vla[1].x = 10;
   vla[1].y = 10;
-  vla[1].spnum = 1;
+  vla[1].spnum = 0;
   vla[1].pbit = 0;
 
   int dx0,dy0,dx1,dy1;
@@ -58,11 +58,8 @@ int main()
     return -1;
   }
 
-  int i;
-  for (i = 0; i < 100; i++)
+  for ( ;; )
   {
-  	place_sprite(vla);
-	place_sprite(vla + 1);
 	
 	vla[0].x += dx0;
 	vla[0].y += dy0;
@@ -80,14 +77,10 @@ int main()
 	if (vla[1].y < 6 || vla[1].y > 113)
 			dy1 *= -1;
 
+  	place_sprite(&vla[0]);
+	place_sprite(&vla[1]);
 
-
-    vla[0].x;
-	vla[0].y = 10;
-
-
-    vla[1].x = 10;
-    vla[1].y = 10;
+	printf("1.x == %d, 1.y == %d, 2.x == %d, 2.y == %d\n", vla[0].x, vla[0].y, vla[1].x, vla[1].y);
 
     usleep(20000);
 
