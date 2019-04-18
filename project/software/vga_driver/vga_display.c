@@ -34,6 +34,7 @@
 #include <linux/of_address.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
+
 #include "vga_display.h"
 
 #define DRIVER_NAME "vga_display"
