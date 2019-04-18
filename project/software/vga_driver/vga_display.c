@@ -2,17 +2,12 @@
  *
  * A Platform device implemented using the misc subsystem
  *
- * Stephen A. Edwards
- * Columbia University
- *
  * References:
  * Linux source: Documentation/driver-model/platform.txt
  *               drivers/misc/arm-charlcd.c
  * http://www.linuxforu.com/tag/linux-device-drivers/
  * http://free-electrons.com/docs/
  *
- * "make" to build
- * insmod vga_ball.ko
  *
  * Check code style with
  * checkpatch.pl --file --no-tree vga_ball.c
@@ -44,39 +39,27 @@
 #define DRIVER_NAME "vga_display"
 
 /* Device registers */
-#define BG_RED(x) (x)
-#define BG_GREEN(x) ((x)+1)
-#define BG_BLUE(x) ((x)+2)
-#define BALL_X(x)  ((x)+3)
-#define BALL_Y(x)  ((x)+4)
+#define POS_X(x) (x)
+#define POS_Y(x) ((x)+1)
+#define SPNUM(x) ((x)+2)
+#define PBIT(x)  ((x)+3)
 
 /*
  * Information about our device
  */
-struct vga_ball_dev {
+struct vga_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
-        vga_ball_color_t background;
-		vga_ball_position position;
+	vga_display_arg_t arg;
 } dev;
 
-/*
- * Write segments of a single digit
- * Assumes digit is in range and the device information has been set up
- */
-static void write_background(vga_ball_color_t *background)
+static void write_sprite(vga_display_arg_t *arg)
 {
-	iowrite8(background->red, BG_RED(dev.virtbase) );
-	iowrite8(background->green, BG_GREEN(dev.virtbase) );
-	iowrite8(background->blue, BG_BLUE(dev.virtbase) );
-	dev.background = *background;
-}
-
-static void write_ball(vga_ball_position *position)
-{
-	iowrite8(position->x, BALL_X(dev.virtbase) );
-	iowrite8(position->y, BALL_Y(dev.virtbase) );
-	dev.position = *position;
+	iowrite8(arg->x, POS_X(dev.virtbase) );
+	iowrite8(arg->y, POS_Y(dev.virtbase) );
+	iowrite8(arg->spnum, SPNUM(dev.virtbase) );
+	iowrite8(arg->pbit, PBIT(dev.virtbase) );
+	dev.arg = *arg;
 }
 
 /*
@@ -84,40 +67,17 @@ static void write_ball(vga_ball_position *position)
  * Read or write the segments on single digits.
  * Note extensive error checking of arguments
  */
-static long vga_ball_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
+static long vga_display_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
-	vga_ball_arg_t vla;
+	vga_display_arg_t vla;
 
 	switch (cmd) {
-	case VGA_BALL_WRITE_BACKGROUND:
-		if (copy_from_user(&vla, (vga_ball_arg_t *) arg,
-				   sizeof(vga_ball_arg_t)))
+	case VGA_DISPLAY_WRITE_SPRITE:
+		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
+				   sizeof(vga_display_arg_t)))
 			return -EACCES;
-		write_background(&vla.background);
+		write_sprite(&vla);
 		break;
-
-	case VGA_BALL_READ_BACKGROUND:
-	  	vla.background = dev.background;
-		if (copy_to_user((vga_ball_arg_t *) arg, &vla,
-				 sizeof(vga_ball_arg_t)))
-			return -EACCES;
-		break;
-
-	case VGA_BALL_WRITE_BALL:
-		vla.position = dev.position;
-		if (copy_from_user(&vla, (vga_ball_arg_t *) arg,
-			   sizeof(vga_ball_arg_t)))
-			return -EACCES;
-		write_ball(&vla.position);
-		break;
-
-	case VGA_BALL_READ_BALL:
-	  	vla.position = dev.position;
-		if (copy_to_user((vga_ball_arg_t *) arg, &vla,
-				 sizeof(vga_ball_arg_t)))
-			return -EACCES;
-		break;
-
 
 	default:
 		return -EINVAL;
@@ -127,25 +87,24 @@ static long vga_ball_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 }
 
 /* The operations our device knows how to do */
-static const struct file_operations vga_ball_fops = {
+static const struct file_operations vga_display_fops = {
 	.owner		= THIS_MODULE,
-	.unlocked_ioctl = vga_ball_ioctl,
+	.unlocked_ioctl = vga_display_ioctl,
 };
 
 /* Information about our device for the "misc" framework -- like a char dev */
 static struct miscdevice vga_display_misc_device = {
 	.minor		= MISC_DYNAMIC_MINOR,
 	.name		= DRIVER_NAME,
-	.fops		= &vga_ball_fops,
+	.fops		= &vga_display_fops,
 };
 
 /*
  * Initialization code: get resources (registers) and display
  * a welcome message
  */
-static int __init vga_ball_probe(struct platform_device *pdev)
+static int __init vga_display_probe(struct platform_device *pdev)
 {
-        vga_ball_color_t beige = { 0xf9, 0xe4, 0xb7 };
 	int ret;
 
 	/* Register ourselves as a misc device: creates /dev/vga_ball */
@@ -171,9 +130,6 @@ static int __init vga_ball_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto out_release_mem_region;
 	}
-        
-	/* Set an initial color */
-        write_background(&beige);
 
 	return 0;
 
@@ -185,7 +141,7 @@ out_deregister:
 }
 
 /* Clean-up code: release resources */
-static int vga_ball_remove(struct platform_device *pdev)
+static int vga_display_remove(struct platform_device *pdev)
 {
 	iounmap(dev.virtbase);
 	release_mem_region(dev.res.start, resource_size(&dev.res));
@@ -203,32 +159,32 @@ MODULE_DEVICE_TABLE(of, vga_display_of_match);
 #endif
 
 /* Information for registering ourselves as a "platform" driver */
-static struct platform_driver vga_ball_driver = {
+static struct platform_driver vga_display_driver = {
 	.driver	= {
 		.name	= DRIVER_NAME,
 		.owner	= THIS_MODULE,
 		.of_match_table = of_match_ptr(vga_display_of_match),
 	},
-	.remove	= __exit_p(vga_ball_remove),
+	.remove	= __exit_p(vga_display_remove),
 };
 
 /* Called when the module is loaded: set things up */
-static int __init vga_ball_init(void)
+static int __init vga_display_init(void)
 {
 	pr_info(DRIVER_NAME ": init\n");
-	return platform_driver_probe(&vga_ball_driver, vga_ball_probe);
+	return platform_driver_probe(&vga_display_driver, vga_display_probe);
 }
 
 /* Calball when the module is unloaded: release resources */
-static void __exit vga_ball_exit(void)
+static void __exit vga_display_exit(void)
 {
-	platform_driver_unregister(&vga_ball_driver);
+	platform_driver_unregister(&vga_display_driver);
 	pr_info(DRIVER_NAME ": exit\n");
 }
 
-module_init(vga_ball_init);
-module_exit(vga_ball_exit);
+module_init(vga_display_init);
+module_exit(vga_display_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Stephen A. Edwards, Columbia University");
-MODULE_DESCRIPTION("VGA ball driver");
+MODULE_DESCRIPTION("VGA display driver");
