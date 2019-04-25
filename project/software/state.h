@@ -1,4 +1,5 @@
-
+#ifndef __STATE_H__
+#define __STATE_H__
 
 #define IDLE 0
 #define DUCK 1
@@ -17,4 +18,4 @@ struct player_state
 };
 
 
-
+#endif
