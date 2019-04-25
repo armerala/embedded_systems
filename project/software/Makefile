@@ -16,6 +16,9 @@ input.o: input.c
 scene.o: scene.c
 	$(CC) $(CFLAGS) scene.c
 
+render.o: render.c
+	$(CC) $(CFLAGS) render.c
+
 
 .PHONY:clean
 clean:

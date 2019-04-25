@@ -1,49 +1,54 @@
 #include "scene.h"
 
 struct player_state ps1, ps2;
-static scene_node scene_list;
+static struct scene_node scene_list = { &scene_list, &scene_list, NULL };
 
+/**
+ * Initializes the scene
+ */
 int init_scene()
 {
-    scene_list = {&scene_list, &scene_list, NULL};
-    ps1 = { {4, 10, IDLE}, 3 };
-    ps2 = { {10, 10, IDLE}, 3 };
+    ps1 = (struct player_state){ 3, (struct sprite_data){4, 10, IDLE} };
+    ps2 = (struct player_state){ 3, (struct sprite_data){10, 10, IDLE} };
 	
 	return 0;
 }
 
-
+/**
+* Iters the scene and calls update handler on all objects
+*/
 void update_scene()
 {
-    iter_scene(&do_update);
+    iter_scene(&__do_update);
 }
 
-static void do_update(scene_object* obj)
+void __do_update(struct scene_object* obj)
 {
     obj->update(obj->state, obj->sd);
 }
 
 /**
  * Add a scene node in using the scene_object as data
+ * 
+ * @param obj: the scene_object to add to the scene
  */
-void scene_handle scene_add(scene_object* obj)
+scene_handle scene_add(struct scene_object* obj)
 {
-    scene_node* new_node = (scene_object*)malloc(sizeof(scene_node));
+	//alloc new node
+    struct scene_node* new_node = (struct scene_node*)malloc(sizeof(struct scene_node));
     if(new_node == NULL)
         return NULL_HANDLE;
 
     new_node->data = obj;
-    scene_add(&scene_list, new_node);
+
+	//patch pointers
+    new_node->next = scene_list.next;
+    new_node->prev = &scene_list;
+
+    scene_list.next->prev = new_node;
+    scene_list.next = new_node;
+
     return (scene_handle)new_node;
-}
-
-static void scene_add(scene_node* prev, scene_node* new_node);
-{
-    new_node->next = prev->next;
-    new_node->prev = prev;
-
-    prev->next->prev = new_node;
-    prev->next = new_node;
 }
 
 /**
@@ -51,7 +56,7 @@ static void scene_add(scene_node* prev, scene_node* new_node);
  */
 void scene_remove(scene_handle handle)
 {
-    scene_node* node = (scene_node*)handle;
+    struct scene_node* node = (struct scene_node*)handle;
 
     node->next->prev = node->prev;
     node->prev->next = node->next;
@@ -62,9 +67,9 @@ void scene_remove(scene_handle handle)
  * Allow a function to iter the whole scene
  * and run a function on it (e.g. for rendering)
  */
-void iter_scene( void (*func)(scene_object*) )
+void iter_scene( void (*func)(struct scene_object*) )
 {
-    scene_node* node = &scene_list;
+    struct scene_node* node = &scene_list;
 
     while( (node = node->next) != &scene_list )
         func(node->data);
