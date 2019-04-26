@@ -35,6 +35,7 @@ extern void __do_update(struct scene_object* obj);
 //scene add/remove
 extern scene_handle scene_add(struct scene_object* obj);
 extern void scene_remove(scene_handle handle);
+extern void __scene_remove(struct scene_node* node);
 
 //util
 extern void iter_scene( void(*func)(struct scene_object*) );

@@ -6,6 +6,8 @@ static pthread_mutex_t p1_input_lock;
 static pthread_t thread2;
 static pthread_mutex_t p2_input_lock;
 
+static uint8_t work_done = 0;
+
 static uint32_t p1_input_bitmask;
 static uint32_t p1_input_bitmask_prev;
 static uint32_t p1_input_bitmask_down;
@@ -15,8 +17,6 @@ static uint32_t p2_input_bitmask;
 static uint32_t p2_input_bitmask_prev;
 static uint32_t p2_input_bitmask_down;
 static uint32_t p2_input_bitmask_up;
-
-static void* handle_input(void* arg);
 
 /**
  * return 0 on success, anything else is failure
@@ -34,10 +34,17 @@ int init_input()
 
     int ret1, ret2;
 
-	ret1 = pthread_create(&thread1, NULL, handle_input, NULL);
-	ret2 = pthread_create(&thread2, NULL, handle_input, NULL);
+	ret1 = pthread_create(&thread1, NULL, __handle_input, NULL);
+	ret2 = pthread_create(&thread2, NULL, __handle_input, NULL);
 
-    return (ret1==0 && ret2==0);
+    return (ret1 | ret2);
+}
+
+void shutdown_input() 
+{
+	work_done = 1;
+	pthread_join(thread1, NULL);
+	pthread_join(thread2, NULL);
 }
 
 /**
@@ -97,9 +104,9 @@ int get_button(int keycode, int is_p1)
 /**
  * A worker for handling input in the background
  */
-static void* handle_input(void* arg) 
+void* __handle_input(void* arg) 
 {
-	for (;;)
+	while(!work_done)
 	{
 		// TODO: blocking joystick input call
 

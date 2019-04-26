@@ -20,21 +20,20 @@ int init_scene()
 	scene_add(ps1);
 	scene_add(ps2);
 
-
 	return 0;
 }
 
 /**
  * shuts down the scene by freeing scene list
  */
-void shutdown_sene()
+void shutdown_scene()
 {
     struct scene_node* node = &scene_list;
-    while( (node = node->next) != &scene_list )
+    while( (node = scene_list.next) != &scene_list )
 	{
 		struct scene_object* obj = (struct scene_object*)node->data;
 		obj->die(obj);
-        free(node);
+        scene_remove(node);
 	}
 }
 
@@ -81,7 +80,11 @@ scene_handle scene_add(struct scene_object* obj)
 void scene_remove(scene_handle handle)
 {
     struct scene_node* node = (struct scene_node*)handle;
+	__scene_remove(node);
+}
 
+void __scene_remove(struct scene_node* node)
+{
     node->next->prev = node->prev;
     node->prev->next = node->next;
     free(node);
