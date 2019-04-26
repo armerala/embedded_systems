@@ -18,7 +18,8 @@ int main()
 	if(init_scene() != 0)
 		exit(1);
 
-    //init physics
+    //if(init_physics() != 0)
+	//	exit(1)
 
     //the game loop
     while(1)
@@ -27,6 +28,9 @@ int main()
         update_scene();
 		//render_frame();		
     }
+
+	//shutdown_input();
+	shutdown_scene();
 
     return 0;
 }

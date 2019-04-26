@@ -2,7 +2,7 @@ CC=gcc
 LDFLAGS=-pthread
 CFLAGS = -c -g -Wall
 
-OBJS=main.o input.o scene.o
+OBJS=main.o input.o scene.o render.o state.o
 
 strEEtfight: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o strEEtfight
@@ -18,6 +18,9 @@ scene.o: scene.c
 
 render.o: render.c
 	$(CC) $(CFLAGS) render.c
+
+state.o: state.c
+	$(CC) $(CFLAGS) state.c
 
 
 .PHONY:clean

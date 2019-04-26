@@ -1,17 +1,41 @@
 #include "scene.h"
 
-struct player_state ps1, ps2;
-static struct scene_node scene_list = { &scene_list, &scene_list, NULL };
+static struct scene_node scene_list = {&scene_list, &scene_list, NULL};
 
 /**
  * Initializes the scene
+ *
+ * @returns 0 on success, 1 otherwise
  */
 int init_scene()
 {
-    ps1 = (struct player_state){ 3, (struct sprite_data){4, 10, IDLE} };
-    ps2 = (struct player_state){ 3, (struct sprite_data){10, 10, IDLE} };
-	
+    struct scene_object* ps1 = player_instantiate();
+    struct scene_object* ps2 = player_instantiate();
+	ps1->pos = (struct vec2){4, 10};
+	ps2->pos = (struct vec2){10, 10};
+
+	if(!ps1 || !ps2)
+		return -1;
+
+	scene_add(ps1);
+	scene_add(ps2);
+
+
 	return 0;
+}
+
+/**
+ * shuts down the scene by freeing scene list
+ */
+void shutdown_sene()
+{
+    struct scene_node* node = &scene_list;
+    while( (node = node->next) != &scene_list )
+	{
+		struct scene_object* obj = (struct scene_object*)node->data;
+		obj->die(obj);
+        free(node);
+	}
 }
 
 /**
@@ -24,7 +48,7 @@ void update_scene()
 
 void __do_update(struct scene_object* obj)
 {
-    obj->update(obj->state, obj->sd);
+    obj->update(obj);
 }
 
 /**
