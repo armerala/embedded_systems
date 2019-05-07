@@ -1,12 +1,11 @@
-CFLAGS = -g -Wall
+TARFILES = Makefile gamepad.c 
 
-OBJECTS = gamepad.o usbkeyboard.o
+gamepad: gamepad.o
+	gcc -g -Wall gamepad.o -o gamepad `sdl2-config --cflags --libs`
 
-TARFILES = Makefile gamepad.c \
-	usbkeyboard.h usbkeyboard.c \
+gamepad.o: gamepad.c
+	gcc -c -g -Wall gamepad.c `sdl2-config --cflags --libs`
 
-lab2 : $(OBJECTS)
-	cc $(CFLAGS) -o gamepad $(OBJECTS) -lusb-1.0 -pthread
 
 lab2.tar.gz : $(TARFILES)
 	rm -rf lab2
@@ -15,8 +14,6 @@ lab2.tar.gz : $(TARFILES)
 	tar zcf lab2.tar.gz lab2
 	rm -rf lab2
 
-gamepad.o: gamepad.c usbkeyboard.h
-usbkeyboard.o : usbkeyboard.c usbkeyboard.h
 
 .PHONY : clean
 clean :
