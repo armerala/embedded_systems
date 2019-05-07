@@ -1,21 +1,20 @@
 #ifndef __STATE_H__
 #define __STATE_H__
 
-#define IDLE 0
-#define DUCK 1
-#define PUNCH 2
-#define KICK 3
-#define WALk 4
-#define DEAD 5
+#include <stdint.h>
 
+#include "render.h"
+#include "scene.h"
 
 struct player_state
 {
-	char x;
-	char y;
-	char health; // 0-3
-	char behavior;
+	uint8_t health; // 0-3
 };
+
+extern struct scene_object* player_instantiate();
+extern void player_destroy(struct scene_object* player_obj);
+extern void player_update(struct scene_object* player_obj);
+
 
 
 #endif
