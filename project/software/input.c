@@ -1,4 +1,5 @@
 #include "input.h"
+#include "gamepad_driver/gamepad.h"
 
 static pthread_t thread1;
 static pthread_mutex_t p1_input_lock;
@@ -108,10 +109,13 @@ void* __handle_input(void* arg)
 {
 	while(!work_done)
 	{
-		// TODO: blocking joystick input call
+		// blocking joystick input call
 
-		// based on what it returned, update arg->state, then set arg->set
+		// TODO: Send player number to gamepad.c
+
 
 	}
+
+	//shutdown_gamepads();
     return NULL;
 }
