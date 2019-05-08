@@ -12,6 +12,7 @@
 static int game_done = 0;
 static void sig_term_handler(int sig_num)
 {
+	fprintf(stderr, "CTRL-C caught, exiting...\n");
 	game_done = 1;
 }
 

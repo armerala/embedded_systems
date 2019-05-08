@@ -116,7 +116,6 @@ struct gamepad_state *get_gamepad_event()
 	{
 		switch(event.type){
 			case SDL_JOYAXISMOTION:
-//				printf("axis %d for joystick %d, value: %d\n", event.jaxis.axis, event.jaxis.which, event.jaxis.value);
 				if (event.jaxis.which == 0) {
 					if (event.jaxis.axis == 1) {
 						if (event.jaxis.value < 0) 
@@ -157,7 +156,6 @@ struct gamepad_state *get_gamepad_event()
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
-				//printf("button %d pressed for joystick %d\n", event.jbutton.button, event.jbutton.which);
 				if (event.jbutton.which == 0) {
 					if (event.jbutton.button == 0)
 						pad0.b0 = BUTTON_DOWN;
@@ -174,7 +172,6 @@ struct gamepad_state *get_gamepad_event()
 				}
 				break;
 			case SDL_JOYBUTTONUP:
-				//printf("button %d released for joystick %d\n", event.jbutton.button, event.jbutton.which);
 				if (event.jbutton.which == 0) {
 					if (event.jbutton.button == 0)
 						pad0.b0 = BUTTON_UP;
@@ -196,7 +193,6 @@ struct gamepad_state *get_gamepad_event()
 				shutdown_gamepads();
 				exit(0);
 			default:
-//				printf("some other kind of event: %d\n", event.type);
 				break;
 		}
 		return &pad0;
