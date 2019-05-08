@@ -1,3 +1,6 @@
+#include <string.h>
+
+
 #include "input.h"
 #include "gamepad_driver/gamepad.h"
 
@@ -34,18 +37,19 @@ int init_input()
     }
 
     int ret1, ret2;
-
+	
 	ret1 = pthread_create(&thread1, NULL, __handle_input, NULL);
-	ret2 = pthread_create(&thread2, NULL, __handle_input, NULL);
+//	ret2 = pthread_create(&thread2, NULL, __handle_input, NULL);
 
-    return (ret1 | ret2);
+    return (ret1 );
 }
 
 void shutdown_input() 
 {
 	work_done = 1;
 	pthread_join(thread1, NULL);
-	pthread_join(thread2, NULL);
+//	pthread_join(thread2, NULL);
+	shutdown_gamepads();
 }
 
 /**
@@ -107,15 +111,50 @@ int get_button(int keycode, int is_p1)
  */
 void* __handle_input(void* arg) 
 {
+	struct gamepad_state *gs;
+
+	init_gamepads();
+
 	while(!work_done)
 	{
-		// blocking joystick input call
 
-		// TODO: Send player number to gamepad.c
+		// TODO: Figure out how to convert struct info to bitmap...
 
+		// blocking gamepad call
+		gs = get_gamepad_event();
+		
+		// TODO: remove these debug print statements
+		/* 
+		char msg[1000];
+		if (gs->which == 0)
+			strcpy(msg, "Gamepad 0");
+		else
+			strcpy(msg, "Gamepad 1");
 
+		if (gs->b0 == BUTTON_UP)
+			strcat(msg, "\nButton 0 up");
+		else
+			strcat(msg, "\nButton 0 down");
+
+		if (gs->b1 == BUTTON_UP)
+			strcat(msg, "\nButton 1 up");
+		else
+			strcat(msg, "\nButton 1 down");
+
+		if (gs->x == JOY_LEFT)
+			strcat(msg, "\nJoystick Left");
+		else if (gs->x == JOY_RIGHT)
+			strcat(msg, "\nJoystick Right");
+
+		if (gs->y == JOY_DOWN)
+			strcat(msg, "\nJoystick Down");
+		else if (gs->y == JOY_UP)
+			strcat(msg, "\nJoystick Up");
+
+		printf("%s\n\n", msg);
+		*/
+	
 	}
 
-	//shutdown_gamepads();
     return NULL;
 }
