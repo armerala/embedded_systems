@@ -4,52 +4,87 @@
 #include "input.h"
 #include "gamepad_driver/gamepad.h"
 
-static pthread_t thread1;
+//workers/threading
+static pthread_t input_thread;
 static pthread_mutex_t p1_input_lock;
-
-static pthread_t thread2;
 static pthread_mutex_t p2_input_lock;
-
 static uint8_t work_done = 0;
 
-static uint32_t p1_input_bitmask;
-static uint32_t p1_input_bitmask_prev;
-static uint32_t p1_input_bitmask_down;
-static uint32_t p1_input_bitmask_up;
+//SDL data
+static SDL_Joystick *joystick1, *joystick2;
 
-static uint32_t p2_input_bitmask;
-static uint32_t p2_input_bitmask_prev;
-static uint32_t p2_input_bitmask_down;
-static uint32_t p2_input_bitmask_up;
+//input bitmasks
+static uint8_t p1_input_bitmask;
+static uint8_t p1_input_bitmask_prev;
+static uint8_t p1_input_bitmask_down;
+static uint8_t p1_input_bitmask_up;
+
+static uint8_t p2_input_bitmask;
+static uint8_t p2_input_bitmask_prev;
+static uint8_t p2_input_bitmask_down;
+static uint8_t p2_input_bitmask_up;
+
+//axes values
+static uint16_t p1_x_axis;
+static uint16_t p1_x_axis_prev;
+static uint16_t p1_y_axis;
+static uint16_t p1_y_axis_prev;
+
+static uint16_t p2_x_axis;
+static uint16_t p2_x_axis_prev;
+static uint16_t p2_y_axis;
+static uint16_t p2_y_axis_prev;
+
 
 /**
  * return 0 on success, anything else is failure
  */
 int init_input() 
 {
-	if (pthread_mutex_init(&p2_input_lock, NULL) != 0){
+	int ret;
+
+	//worker init threads
+	ret = pthread_mutex_init(&p2_input_lock, NULL);
+	ret |= pthread_mutex_init(&p1_input_lock, NULL);
+	if (ret != 0){
 	    fprintf(stderr, "failed to initialize mutex\n");
+		work_done = 1;
 	    return 1;
 	}
-	if (pthread_mutex_init(&p1_input_lock, NULL) != 0){
-	    fprintf(stderr, "failed to initialize mutex\n");
-	    return 1;
-    }
 
-    int ret1, ret2;
-	
-	ret1 = pthread_create(&thread1, NULL, __handle_input, NULL);
-//	ret2 = pthread_create(&thread2, NULL, __handle_input, NULL);
+	//verify joystick number
+	if(SDL_NumJoysticks() != 2) {
+		fprintf(stderr, "SDL failed to discover 2 joysticks");
+		work_done = 1;
+		return 1;
+	}
 
-    return (ret1 );
+	//init sdl
+	joystick1 = SDL_JoystickOpen(0);
+	joystick2 = SDL_JoystickOpen(1);
+
+	ret = SDL_Init(SDL_INIT_JOYSTICK);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to initialize joystick via SDL: %s\n", SDL_GetError());
+		work_done = 1;
+		return 1;
+	}
+
+	//create sdl worker
+	ret = pthread_create(&input_thread, NULL, __handle_joy, NULL);
+	if(ret != 0){
+		fprintf(stderr, "Failed to initialize joystick via SDL: %s\n", SDL_GetError());
+		work_done = 1;
+		return 1;
+	}
+
+	return 0;
 }
 
 void shutdown_input() 
 {
 	work_done = 1;
-	pthread_join(thread1, NULL);
-//	pthread_join(thread2, NULL);
-	shutdown_gamepads();
+	pthread_join(input_thread, NULL);
 }
 
 /**
@@ -64,10 +99,14 @@ void update_inputs()
     p1_input_bitmask_down = p1_input_bitmask & ~p1_input_bitmask_prev;
     p1_input_bitmask_up = ~p1_input_bitmask & p1_input_bitmask_prev;
     p1_input_bitmask_prev = p1_input_bitmask;
+	p1_x_axis_prev = p1_x_axis;
+	p1_y_axis_prev = p1_y_axis;
 
     p2_input_bitmask_down = p2_input_bitmask & ~p2_input_bitmask_prev;
     p2_input_bitmask_up = ~p2_input_bitmask & p2_input_bitmask_prev;
     p2_input_bitmask_prev = p2_input_bitmask;
+	p2_x_axis_prev = p2_x_axis;
+	p2_y_axis_prev = p2_y_axis;
 
     pthread_mutex_unlock(&p2_input_lock);
     pthread_mutex_unlock(&p1_input_lock);
@@ -106,55 +145,89 @@ int get_button(int keycode, int is_p1)
         return p2_input_bitmask_prev & keycode;
 }
 
+int get_axis(int axis, int is_p1)
+{
+	if(is_p1)
+		return (axis == 0) p1_x_axis_prev : p1_y_axis_prev;
+	else
+		return (axis == 0) p2_y_axis_prev : p2_y_axis_prev;
+}
+
 /**
  * A worker for handling input in the background
  */
-void* __handle_input(void* arg) 
+void* __handle_joy(void* arg)
 {
-	struct gamepad_state *gs;
-
-	init_gamepads();
-
-	while(!work_done)
-	{
-
-		// TODO: Figure out how to convert struct info to bitmap...
-
-		// blocking gamepad call
-		gs = get_gamepad_event();
-		
-		// TODO: remove these debug print statements
-		/* 
-		char msg[1000];
-		if (gs->which == 0)
-			strcpy(msg, "Gamepad 0");
-		else
-			strcpy(msg, "Gamepad 1");
-
-		if (gs->b0 == BUTTON_UP)
-			strcat(msg, "\nButton 0 up");
-		else
-			strcat(msg, "\nButton 0 down");
-
-		if (gs->b1 == BUTTON_UP)
-			strcat(msg, "\nButton 1 up");
-		else
-			strcat(msg, "\nButton 1 down");
-
-		if (gs->x == JOY_LEFT)
-			strcat(msg, "\nJoystick Left");
-		else if (gs->x == JOY_RIGHT)
-			strcat(msg, "\nJoystick Right");
-
-		if (gs->y == JOY_DOWN)
-			strcat(msg, "\nJoystick Down");
-		else if (gs->y == JOY_UP)
-			strcat(msg, "\nJoystick Up");
-
-		printf("%s\n\n", msg);
-		*/
+	int p1_joy_id, p2_joy_id;
+	int is_p1;
 	
+	uint16_t* axis_val;
+	uint8_t* button_bitmask;
+
+	p1_joy_id = SDL_JoystickInstanceID(joystick1, 0);
+	p2_joy_id = SDL_JoystickInstanceID(joystick1, 1);
+
+	SDL_JoystickEventState(SDL_ENABLE);
+	SDL_Event event;
+
+	while(!work_done && SDL_PollEvent(&event))
+	{
+		//figure out which one emitted the event
+		is_p1 = (event.jaxis.which == p1_joy_id);
+		pthread_mutex_t* mut = (is_p1) ? &p1_input_lock: &p2_input_lock;
+		uint16_t* x_axis_val = (is_p1) ? &p1_x_axis : &p2_x_axis;
+		uint16_t* y_axis_val = (is_p1) ? &p1_y_axis : &p2_y_axis;
+		uint8_t* button_input_mask = (is_p1) ? &p1_input_bitmask : &p2_input_bitmask;
+
+		//modify state
+		pthread_mutex_lock(mut);
+
+		switch(event.type){
+
+			//case: axis event -- determine axis and set
+			case SDL_JOYAXISMOTION:
+
+				if(event.jaxis.axis == 0)
+					axis_val =(is_p1) ? &p1_x_axis : &p2_x_axis;
+				else
+					axis_val = (is_p1) ? &p1_y_axis : &p2_y_axis;
+
+				*axis_val = event.jaxis.value;
+				break;
+
+			//case; button down -- set bit
+			case SDL_JOYBUTTONDOWN:
+
+				input_button_bitmask = (is_p1) ? &p1_input_bitmask : &p2_input_bitmask;
+				if(event.jbutton.button == 0)
+					*input_button_bitmask |= JOY_BTN_1;
+				else if(event.jbutton.button == 1)
+					*input_button_bitmask |= JOY_BTN_2;
+
+				break;
+
+			//case; button up -- clear bit
+			case SDL_JOYBUTTONUP:
+
+				input_button_bitmask = (is_p1) ? &p1_input_bitmask : &p2_input_bitmask;
+				if(event.jbutton.button == 0)
+					*input_button_bitmask &= ~JOY_BTN_1;
+				else if(event.jbutton.button == 1)
+					*input_button_bitmask &= ~JOY_BTN_2;
+
+				break;
+
+			//idk situation
+			default:
+				printf("some other kind of event: %d\n", event.type);
+				break;
+		}
+
+		pthread_mutex_unlock(mut);
 	}
 
-    return NULL;
+	SDL_JoystickClose(joystick1);
+	SDL_JoystickClose(joystick2);
+	
+	return NULL;
 }
