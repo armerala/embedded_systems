@@ -66,8 +66,7 @@ module sdram_controller(
 	//interface our modules
 	input ck,                     //clk (should be same as used by sdram)
 	input reset_n,                //reset signal -negative
-	output reg dq_ready,          //data is available on the line
-	output reg [15:0] dq          //data that is available
+	output reg data_available;    //amount of data available
 );
 
 
@@ -86,7 +85,6 @@ initial begin
 	mem_ba <= 2'b0;
 	`NOP_COMMAND
 
-	dq_ready <= 1'b0;
 	dq <= 16'b0;
 end
 
@@ -127,8 +125,7 @@ begin
 				`ACTIVATE_STEP : begin `ACTIVATE_COMMAND(1'b1,1'b1) end
 				`ISSUE_READ_STEP : begin `READ_COMMAND(1'b1, 1'b1) end
 				`DATA_READY_STEP : begin 
-					data_available <= 2'b11; 
-					dq_ready <= 1'b1; 
+					data_available <= 3'b111; 
 					`NOP_COMMAND 
 				end
 				default : begin `NOP_COMMAND end
@@ -150,9 +147,7 @@ begin
 	state <= next_state;
 
 	if(data_available > 3'b0) begin
-		dq <= mem_dq;
 		data_available <= data_available - 1'b1;
-		dq_ready <= (data_avaiable == 3'b001) ? 1'b1 : 1'b0;
 	end
 end
 

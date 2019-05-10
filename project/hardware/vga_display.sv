@@ -12,7 +12,7 @@
  */
 
 module vga_display(input logic        clk,
-	        input logic 	   reset,
+	    input logic 	   reset,
 		input logic [7:0]  writedata,
 		input logic 	   write,
 		input 		   chipselect,
