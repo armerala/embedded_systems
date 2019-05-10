@@ -53,21 +53,21 @@
  ************************************************************************************************/
 module sdram_controller(
 	//interface with sdram chip
-	inout [15:0] mem_dq,
-	output reg [12:0] mem_a,
-	output reg [1:0] mem_ba,
-	output reg mem_cke,
-	output reg mem_ldqm,
-	output reg mem_udqm,
-	output reg mem_we_n,
-	output reg mem_cas_n,
-	output reg mem_ras_n,
-	output reg mem_cs_n,
+	inout [15:0] mem_dq,          //sdram data line
+	output reg [12:0] mem_a,      //sdram address line
+	output reg [1:0] mem_ba,      //sdram mem bank line
+	output reg mem_cke,           //sdram clock enable
+	output reg mem_ldqm,          //sdram upper data bits mask
+	output reg mem_udqm,          //sdram upper data bits mask
+	output reg mem_we_n,          //sdram write enable -negative
+	output reg mem_cas_n,         //sdram col addr strobe - negative
+	output reg mem_ras_n,         //sdram row addr strobe - negative 
+	output reg mem_cs_n,          //sdram chip select - negative
 	//interface our modules
-	input ck,
-	input reset_n,
-	output reg dq_ready,
-	output reg [15:0] dq
+	input ck,                     //clk (should be same as used by sdram)
+	input reset_n,                //reset signal -negative
+	output reg dq_ready,          //data is available on the line
+	output reg [15:0] dq          //data that is available
 );
 
 
