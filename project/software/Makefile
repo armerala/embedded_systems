@@ -11,7 +11,7 @@ main.o: main.c input.o scene.o
 	$(CC) -c -g -Wall main.c
 
 input.o: input.c
-	$(CC) $(CFLAGS) input.c
+	$(CC) $(CFLAGS) `sdl2-config --cflags --libs` input.c
 
 scene.o: scene.c
 	$(CC) $(CFLAGS) scene.c
