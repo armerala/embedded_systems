@@ -1,11 +1,11 @@
 CC=gcc
-LDFLAGS=-pthread
+LDFLAGS=-pthread `sdl2-config --cflags --libs`
 CFLAGS = -c -g -Wall
 
-OBJS=main.o input.o scene.o render.o state.o
+OBJS=main.o input.o scene.o render.o state.o gamepad.o
 
 strEEtfight: $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o strEEtfight
+	$(CC) -g -Wall $(OBJS) -o strEEtfight $(LDFLAGS)
 
 main.o: main.c input.o scene.o
 	$(CC) -c -g -Wall main.c
@@ -21,6 +21,9 @@ render.o: render.c
 
 state.o: state.c
 	$(CC) $(CFLAGS) state.c
+
+gamepad.o: gamepad_driver/gamepad.c
+	gcc -c -g -Wall gamepad_driver/gamepad.c `sdl2-config --cflags --libs`
 
 
 .PHONY:clean
