@@ -126,16 +126,18 @@ begin
 			case(load_op_counter) begin
 				`ACTIVATE_STEP : begin `ACTIVATE_COMMAND(1'b1,1'b1) end
 				`ISSUE_READ_STEP : begin `READ_COMMAND(1'b1, 1'b1) end
-				`DATA_READY_STEP : begin data_available <= 2'b11; dq_ready <= 1'b1; end
+				`DATA_READY_STEP : begin 
+					data_available <= 2'b11; 
+					dq_ready <= 1'b1; 
+					`NOP_COMMAND 
+				end
 				default : begin `NOP_COMMAND end
 			endcase
-			load_op_counter <= load_op_counter + 1;
-		end
-
-		default: begin
+			load_op_counter <= load_op_counter + 1; //let this rollover ... conveniently, there are 4 steps, and
 		end
 		
 	endcase
+
 end
 
 /**
@@ -146,7 +148,12 @@ always @(posedge ck)
 begin
 
 	state <= next_state;
-	//mem_dq
+
+	if(data_available > 3'b0) begin
+		dq <= mem_dq;
+		data_available <= data_available - 1'b1;
+		dq_ready <= (data_avaiable == 3'b001) ? 1'b1 : 1'b0;
+	end
 end
 
 endmodule
