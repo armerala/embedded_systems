@@ -12,7 +12,7 @@
 static int game_done = 0;
 static void sig_term_handler(int sig_num)
 {
-	fprintf(stderr, "CTRL-C caught, exiting...\n");
+	fprintf(stderr, "CTRL-C caught, exiting...(may need to move joystick one more time)\n");
 	game_done = 1;
 }
 

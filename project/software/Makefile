@@ -2,16 +2,16 @@ CC=gcc
 LDFLAGS=-pthread `sdl2-config --cflags --libs`
 CFLAGS = -c -g -Wall
 
-OBJS=main.o input.o scene.o render.o state.o gamepad.o
+OBJS=main.o input.o scene.o render.o state.o #gamepad.o
 
 strEEtfight: $(OBJS)
 	$(CC) -g -Wall $(OBJS) -o strEEtfight $(LDFLAGS)
 
 main.o: main.c input.o scene.o
-	$(CC) -c -g -Wall main.c
+	$(CC) -c -g -Wall main.c `sdl2-config --cflags --libs`
 
 input.o: input.c
-	$(CC) $(CFLAGS) `sdl2-config --cflags --libs` input.c
+	$(CC) $(CFLAGS) input.c `sdl2-config --cflags --libs` 
 
 scene.o: scene.c
 	$(CC) $(CFLAGS) scene.c

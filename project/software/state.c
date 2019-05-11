@@ -1,6 +1,6 @@
 #include "state.h"
 
-struct scene_object* player_instantiate()
+struct scene_object* player_instantiate(int which)
 {
 	struct player_state* state;
 	struct sprite_data* sd;
@@ -27,6 +27,7 @@ struct scene_object* player_instantiate()
 	}
 
 	//assign data
+	state->which = (uint8_t) which;
 	state->health = 3;
 	sd->magic = IDLE;
 
@@ -48,4 +49,7 @@ void player_destroy(struct scene_object* player_obj)
 
 void player_update(struct scene_object* player_obj)
 {
+	struct player_state *state = player_obj->state;
+
+	get_button_down(state->which);
 }
