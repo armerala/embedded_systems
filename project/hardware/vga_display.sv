@@ -11,17 +11,22 @@
  *   	Alan Armero / aa3938
  */
 
-module vga_display(input logic        clk,
-	    input logic 	   reset,
-		input logic [7:0]  writedata,
-		input logic 	   write,
-		input 		   chipselect,
-		input logic [3:0]  address,
+module vga_display(
+		input clk, //should be clk50
+	    input reset,
+		input [7:0] writedata,
+		input write,
+		input chipselect,
+		input [3:0] address,
 
-		output logic [7:0] VGA_R, VGA_G, VGA_B,
-		output logic 	   VGA_CLK, VGA_HS, VGA_VS,
-		                   VGA_BLANK_n,
-		output logic 	   VGA_SYNC_n);
+		output [7:0] VGA_R, 
+		output [7:0] VGA_G, 
+		output [7:0] VGA_B,
+		output VGA_CLK, 
+		output VGA_HS, 
+		output VGA_VS,
+		output VGA_BLANK_n,
+		output VGA_SYNC_n);
 
    logic [10:0]	   hcount;
    logic [9:0]     vcount;

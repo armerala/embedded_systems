@@ -8,13 +8,13 @@
  ******************************************************************************************/
 
 //defines for what to do during loading operation
-`define ACTIVATE_STEP 2'b00
-`define ISSUE_READ_STEP 2'b01
-`define DATA_READY_STEP 2'b11
 
 //state for this module
-`define RESET_STATE 2'b00
-`define LOADING_STATE 2'b01
+`define SDRAM_RESET_STATE 3'b000
+`define SDRAM_ACTIVATE_STATE 3'b001
+`define SDRAM_IDLE_STATE 3'b010
+`define SDRAM_ISSUE_READ_STATE 3'b011
+`define SDRAM_DATA_READY_STEP 3'b100
 
 `define MODE_COMMAND \ 
 	mem_cs_n <= 1'b1; \
@@ -64,17 +64,19 @@ module sdram_controller(
 	output reg mem_ras_n,         //sdram row addr strobe - negative 
 	output reg mem_cs_n,          //sdram chip select - negative
 	//interface our modules
-	input ck,                     //clk (should be same as used by sdram)
+	input ck143,                  //clk (should be same as used by sdram)
 	input reset_n,                //reset signal -negative
+	input pause,                  //pause (e.g. if output buffer is full)
+	input unpause,                //unpause signal
 	output reg data_available;    //amount of data available
 );
 
 
 parameter words_to_load = 128; //idk, however many pixels we have total
 reg [31:0] img_load_counter;
-reg [1:0] state;
-reg [1:0] next_state;
-reg [2:0] data_available; //8 bits max burst
+reg [3:0] state;
+reg [3:0] next_state;
+reg [1:0] n_data_available; //2 read burst
 
 //start cke high
 initial begin
@@ -86,15 +88,21 @@ initial begin
 	`NOP_COMMAND
 
 	dq <= 16'b0;
+	next_state <= `RESET_STATE;
 end
 
 /**
  * synchronize any async inputs here
  */
-always @(negedge reset_n)
+always @(negedge reset_n, posedge pause, posedge unpause)
 begin
 	if(~reset_n)
 		next_state <= `RESET_STATE;
+
+	if(pause)
+		is_paused <= 1'b1;
+	else if(unpause)
+		is_paused <= 1'b0;
 end
 
 /**
@@ -103,36 +111,48 @@ end
  * and in general the sram operates on the posedge, thus
  * we want to issue commands and such on the negedge to be on time.
  */
-always @(negedge ck)
+always @(negedge ck143)
 begin
 
 	case(state)
 	begin
 
 		//case : reset
-		`RESET_STATE: begin
+		`SDRAM_RESET_STATE: begin
 
 			`MODE_COMMAND
 			img_load_counter <= 32'b0;
-			data_available <= 3'b0;
-			next_state <= `LOADING_STATE;
-			load_op_counter <= 3'b0;
+			n_data_available <= 2'b0;
+			next_state <= `SDRAM_ACTIVATE_STATE;
 		end
 		
-		//case : continue load
-		`LOADING_STATE: begin
-			case(load_op_counter) begin
-				`ACTIVATE_STEP : begin `ACTIVATE_COMMAND(1'b1,1'b1) end
-				`ISSUE_READ_STEP : begin `READ_COMMAND(1'b1, 1'b1) end
-				`DATA_READY_STEP : begin 
-					data_available <= 3'b111; 
-					`NOP_COMMAND 
-				end
-				default : begin `NOP_COMMAND end
-			endcase
-			load_op_counter <= load_op_counter + 1; //let this rollover ... conveniently, there are 4 steps, and
+		//case: issue activate command
+		`SDRAM_ACTIVATE_STATE : begin 
+			`ACTIVATE_COMMAND(1'b1,1'b1) 
+			next_state <= `ISSUE_READ_STATE;
 		end
-		
+
+		//case: issue read -- only allow arrest before issuing read
+		`SDRAM_ISSUE_READ_STATE : begin 
+			if(~is_paused) begin
+				`READ_COMMAND(1'b1, 1'b1) 
+				next_state <= `SDRAM_WAIT_STATE;
+			end
+		end
+	
+		//case : wait one until data is ready
+		`SDRAM_WAIT_STATE : begin
+			`NOP_COMMAND
+			next_state = `SDRAM_DATA_READY_STATE;
+		end
+
+		//case: starting spitting data and raise proper flag
+		`SDRAM_DATA_READY_STEP : begin 
+			`NOP_COMMAND 
+			n_data_available <= 2'b11; 
+			next_state <= SDRAM_ACTIVATE_STATE;
+		end
+
 	endcase
 
 end
@@ -141,14 +161,15 @@ end
  * state transitions and retrive data on the negedge. See above 
  * comment before negedge clock always block for reasoning on this
  */
-always @(posedge ck)
+always @(posedge ck143)
 begin
 
 	state <= next_state;
 
-	if(data_available > 3'b0) begin
-		data_available <= data_available - 1'b1;
+	if(n_data_available > 2'b00) begin
+		n_data_available <= n_data_available - 1'b1;
 	end
+	data_available <= (n_data_available > 2'b01) ? 1'b1 : 1'b0;
 end
 
 endmodule
