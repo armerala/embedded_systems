@@ -1,6 +1,6 @@
 
-// 16 X 8 synchronous RAM with old data read-during-write behavior
-module image_memory(
+//synchronous RAM with old data read-during-write behavior
+module memory(
 	input clk,
 	input we,
 	input [(mem_size_bytes/3)-1:0]  a,

@@ -12,22 +12,55 @@
  */
 
 module vga_display(
-		input clk, //should be clk50
-	    input reset,
-		input [7:0] writedata,
-		input write,
-		input chipselect,
-		input [3:0] address,
+		input clk50,
+	  input reset,
 
-		output [7:0] VGA_R, 
-		output [7:0] VGA_G, 
+    input clear_render_queue,
+    input render_queue_we,
+    input [7:0] render_queue_din,
+
+		input [23:0] pixel_din,
+    output reg [14:0] pixel_addr,
+
+		output [7:0] VGA_R,
+		output [7:0] VGA_G,
 		output [7:0] VGA_B,
 		output VGA_CLK, 
 		output VGA_HS, 
 		output VGA_VS,
 		output VGA_BLANK_n,
-		output VGA_SYNC_n);
+		output VGA_SYNC_n
+  );
 
+  //render queue
+  reg [7:0] render_queue_buf_end;
+  reg [7:0] image_magic;
+  memory render_queue(
+    .clk(clk50),
+    .a()
+    .we(render_queue_we),
+    .din(render_queue_din),
+    .dout()
+   );
+
+   always @(posedge clk) begin
+   end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
    logic [10:0]	   hcount;
    logic [9:0]     vcount;
 
@@ -35,7 +68,7 @@ module vga_display(
    logic [7:0] 	   pos_x, pos_y, spnum, pbit;
 	
 
-   vga_counters counters(.clk50(clk), .*);
+   vga_counters counters(.clk50(clk50), .*);
 
    always_ff @(posedge clk)
      if (reset) begin
@@ -94,10 +127,15 @@ module vga_display(
 endmodule
 
 module vga_counters(
- input logic 	     clk50, reset,
- output logic [10:0] hcount,  // hcount[10:1] is pixel column
- output logic [9:0]  vcount,  // vcount[9:0] is pixel row
- output logic 	     VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_n, VGA_SYNC_n);
+ input clk50, 
+ input reset,
+ output [10:0] hcount,  // hcount[10:1] is pixel column
+ output [9:0]  vcount,  // vcount[9:0] is pixel row
+ output VGA_CLK, 
+ output VGA_HS,
+ output VGA_VS, 
+ output VGA_BLANK_n, 
+ output VGA_SYNC_n);
 
 /*
  * 640 X 480 VGA timing for a 50 MHz clock: one pixel every other cycle

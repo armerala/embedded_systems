@@ -128,7 +128,7 @@ begin
 		
 		//case: issue activate command
 		`SDRAM_ACTIVATE_STATE : begin 
-			`ACTIVATE_COMMAND(1'b1,1'b1) 
+			`ACTIVATE_COMMAND(1'b1,1'b1)
 			next_state <= `ISSUE_READ_STATE;
 		end
 
@@ -138,6 +138,8 @@ begin
 				`READ_COMMAND(1'b1, 1'b1) 
 				next_state <= `SDRAM_WAIT_STATE;
 			end
+			else
+				`NOP_COMMAND
 		end
 	
 		//case : wait one until data is ready
@@ -149,7 +151,8 @@ begin
 		//case: starting spitting data and raise proper flag
 		`SDRAM_DATA_READY_STEP : begin 
 			`NOP_COMMAND 
-			n_data_available <= 2'b11; 
+			n_data_available <= 2'b11;
+			data_available <= 1'b1;
 			next_state <= SDRAM_ACTIVATE_STATE;
 		end
 
@@ -169,8 +172,10 @@ begin
 	if(n_data_available > 2'b00) begin
 		n_data_available <= n_data_available - 1'b1;
 	end
-	data_available <= (n_data_available > 2'b01) ? 1'b1 : 1'b0;
-end
+
+	//compare to 1 b/c that means n_data_avaiable is being decremented to zero.
+	//Next neg edge data_available will be 0 then
+	data_available <= (data_available > 2'b01) ? 1'b1 : 1'b0; 
 
 endmodule
 

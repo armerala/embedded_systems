@@ -26,7 +26,7 @@ module fpga_top_level(
 	/*VGA INTERFACES*/
 	output vga_clk,
 	output [7:0] vga_r,
-	output [7:0] vga_g, 
+	output [7:0] vga_g,
 	output [7:0] vga_b,
 	output vga_hs, 
 	output vga_vs,
@@ -42,28 +42,36 @@ module fpga_top_level(
 
 	wire reset_n; //convenience
 	assign reset_n = ~reset;
+
 	reg [1:0] state;
 	reg [1:0] next_state;
 
 	//internal stuff to hook img_mem to vga and sdram
 	reg img_mem_we;
 	reg [3:0] img_mem_addr;
-	reg [3:0] img_mem_dout;
-	reg [3:0] img_mem_din;
 	wire [3:0] img_mem_dout;
 
+	reg fifo_pop_front;
 	wire fifo_we;
-	wire fifo_pop_front;
-	wire [] fifo_din;
-	wire [] fifo_dout;
-	wire [] fifo_hw;
-	wire [] fifo_lw;
+	wire [15:0] fifo_din;
+	wire [23:0] fifo_dout;
+	reg [23:0] fifo_dout_buf;
+	wire fifo_hw;
+	wire fifo_lw;
 
-	//manage sdram outputs
-	wire sdram_data_available;
+	reg vga_render_queu_we;
+
+	wire sdram_pause_load;
+	wire sdram_unpause_load;
+	assign sdram_pause_load = ((state != `FPGA_LOADING_STATE) | (fifo_hw));
+	assign sdram_unpause_load = ((state == `FPGA_LOADING_STATE) & (fifo_lw))
+
+	//counters and such for loading
+	parameter total_bytes = 512;
+	reg [31:0] bytes_to_load;
 
 	//instance sdram controller
-	sdram_controller sdram_ctrl(
+	sdram_controller sdram_ctrlr(
 		.mem_dq(mem_dq),
 		.mem_cke(mem_cke),
 		.mem_a(mem_a),
@@ -74,28 +82,37 @@ module fpga_top_level(
 		.mem_raw_n(mem_ras_n),
 		.mem_cs_n(mem_cs_n),
 		.ck143(clk143),
-		.pause(fifo_hw),
 		.reset_n(reset_n),
-		.data_available(sdram_data_available)
+		.pause(sdram_pause_load),
+		.unpause(sdram_unpause_load),
+		.data_available(fifo_we)
 	);
 	
 	//instance image memory
-	image_memory image_mem(
-		.clk(clk)
+	memory image_mem(
+		.clk(clk50),
 		.a(img_mem_addr),
-		.din(dout),
 		.we(img_mem_we),
-		.dout(img_mem_din)
+		.din(fifo_dout_buf),
+		.dout(img_mem_dout)
 	);
+	defparam image_mem.word_size = 24;
+	defparam image_mem.n_words = bytes_to_load * 3;
 
 	//instance our vga display
 	vga_display vga_disp(
 		//TODO: hook up data and magic number interpreation in vga display
+		.clk50(.clk50),
+		.reset(reset),
+		.render_queue_we(),
+		.render_queue_din(hps_write_data),
+		.pixel_data(image_mem_dout),
+		.pixel_addr(),
 		.VGA_R(vga_r),
 		.VGA_G(vga_g),
 		.VGA_B(vga_b),
 		.VGA_CLK(vga_clk), 
-		.VGA_HS(vga_hs), 
+		.VGA_HS(vga_hs),
 		.VGA_VS(vga_vs),
 		.VGA_BLANK_N(vga_blank_n),
 		.VGA_SYNC_N(vga_sync_n)
@@ -107,23 +124,52 @@ module fpga_top_level(
 		.we(fifo_we),
 		.pop_front(fifo_pop_front),
 		.din(fifo_din),
-		.dout(fifo_dout)
+		.dout(fifo_dout),
+		.buf_lw(fifo_lw),
+		.buf_hw(fifo_hw)
 	);
 
 	//async reset to sync reset
 	always @(posedge reset) begin
 		if(reset)
-			next_state <= `FPGA_IDLE
-		else if()
+			next_state <= `FPGA_RESET_STATE;
 	end
 
-	//do business on negedge
+	//synchronous state changes
 	always @(negedge clk) begin
+		state <= next_state;
+		
+		fifo_pop_front <= 1'b0;
+		image_mem_we <= 1'b0;
+	end
+
+	//do business on posgedge (e.g. reading buffer, etc.)
+	always @(posedge clk) begin
 		
 		case(state) begin
-			`FPGA_RESET_STATE : ;
-			`FPGA_LOADING_STATE : ;
-			`FPGA_RUNNING_STATE : ;
+			`FPGA_RESET_STATE : begin
+				//reset bytes to load and start loading
+				bytes_to_load <= total_bytes;
+				next_state <= FPGA_LOADING_STATE;
+			end
+			
+			`FPGA_LOADING_STATE : begin
+				//case: continue load
+				if(bytes_to_load < total_bytes) begin
+					fifo_dout_buf <= fifo_dout; //prevent fifo data from changing under us
+					if(~fifo_lw || bytes_to_load < 128) begin
+						image_mem_we <= 1'b1;
+						fifo_pop_front <= 1'b1;
+						bytes_to_load <= bytes_to_load - 3;
+					end
+				//case: load done
+				else
+					next_state <= `FPGA_RUNNING_STATE;
+				end
+			end
+
+			`FPGA_RUNNING_STATE : begin
+			end
 		end
 
 	end

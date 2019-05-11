@@ -3,8 +3,8 @@ module fifo_buffer(
 	input clk143,
 	input we,
 	input pop_front,
-	input [word_size-1:0]  din,
-	output [word_size-1:0] dout,
+	input [write_word_size-1:0]  din,
+	output [read_word_size-1:0] dout,
 	output reg buf_hw, //high watermark (buffer almost full)
 	output reg buf_lw  //low watermak (buffer almost empty)
 );
@@ -17,7 +17,16 @@ module fifo_buffer(
 	reg [$clog2(buf_size)-1:0] buf_dif;
 	reg [buf_size-1:0] mem;
 	
+	reg pop_front_internal;
+
+	always_ff @(negedge clk) begin
+		pop_front_internal <= pop_front;
+	end
+	
 	always_ff @(posedge clk) begin
+	
+		//reset signals
+		pop_edge_internal <= 1'b0;
 
 		//writing
 		if (we) begin
@@ -44,4 +53,5 @@ module fifo_buffer(
 			buf_lw <= 1'b1;
 		end
 	end
+
 );
