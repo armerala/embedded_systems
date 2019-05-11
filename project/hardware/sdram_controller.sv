@@ -12,9 +12,9 @@
 //state for this module
 `define SDRAM_RESET_STATE 3'b000
 `define SDRAM_ACTIVATE_STATE 3'b001
-`define SDRAM_IDLE_STATE 3'b010
-`define SDRAM_ISSUE_READ_STATE 3'b011
-`define SDRAM_DATA_READY_STEP 3'b100
+`define SDRAM_IDLE_STATE 3'b011
+`define SDRAM_ISSUE_READ_STATE 3'b010
+`define SDRAM_DATA_READY_STATE 3'b110
 
 `define MODE_COMMAND \ 
 	mem_cs_n <= 1'b1; \

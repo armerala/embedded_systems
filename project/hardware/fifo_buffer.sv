@@ -10,6 +10,8 @@ module fifo_buffer(
 );
 	parameter write_word_size = 16;
 	parameter read_word_size = 24;
+	parameter hw_mark = 384;
+	parameter lw_mark = 128;
 	parameter buf_size = 512;
 
 	reg [$clogs(buf_size)-1:0] buf_begin;
@@ -41,10 +43,10 @@ module fifo_buffer(
 		
 		//end-begin dif and watermark flags
 		buf_dif <= buf_end - buf_begin;
-		if(buf_dif > 384) begin
+		if(buf_dif > hw_mark) begin
 			buf_hw <= 1'b1;
 		end
-		else if(buf_dif > 128) begin
+		else if(buf_dif > lw_mark) begin
 			buf_hw <= 1'b0;
 			buf_lw <= 1'b0;
 		end
