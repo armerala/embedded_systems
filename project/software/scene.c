@@ -10,7 +10,7 @@ static struct scene_node scene_list = {&scene_list, &scene_list, NULL};
 int init_scene()
 {
     struct scene_object* ps1 = player_instantiate(1);
-    struct scene_object* ps2 = player_instantiate(2);
+    struct scene_object* ps2 = player_instantiate(0);
 	ps1->pos = (struct vec2){4, 10};
 	ps2->pos = (struct vec2){10, 10};
 

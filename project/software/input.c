@@ -196,7 +196,7 @@ void* __handle_joy(void* arg)
 					axis_val = y_axis_val;
 					 
 				*axis_val = event.jaxis.value;
-				printf("axis val: %d\n", *axis_val);
+//				printf("axis val: %d\n", *axis_val);
 				break;
 
 			//case; button down -- set bit
@@ -209,7 +209,7 @@ void* __handle_joy(void* arg)
 					*input_button_bitmask |= JOY_BTN_2;
 
 				
-				printf("button mask: %d\n", *input_button_bitmask);
+//				printf("button mask: %d\n", *input_button_bitmask);
 				break;
 
 			//case; button up -- clear bit
@@ -221,7 +221,7 @@ void* __handle_joy(void* arg)
 				else if(event.jbutton.button == 1)
 					*input_button_bitmask &= ~JOY_BTN_2;
 
-				printf("button mask: %d\n", *input_button_bitmask);
+//				printf("button mask: %d\n", *input_button_bitmask);
 				
 				break;
 			case 256:

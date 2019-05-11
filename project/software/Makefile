@@ -8,22 +8,19 @@ strEEtfight: $(OBJS)
 	$(CC) -g -Wall $(OBJS) -o strEEtfight $(LDFLAGS)
 
 main.o: main.c input.o scene.o
-	$(CC) -c -g -Wall main.c `sdl2-config --cflags --libs`
+	$(CC) -c -g -Wall main.c $(LDFLAGS)
 
 input.o: input.c
-	$(CC) $(CFLAGS) input.c `sdl2-config --cflags --libs` 
+	$(CC) $(CFLAGS) input.c $(LDFLAGS)
 
 scene.o: scene.c
-	$(CC) $(CFLAGS) scene.c
+	$(CC) $(CFLAGS) scene.c $(LDFLAGS)
 
 render.o: render.c
 	$(CC) $(CFLAGS) render.c
 
 state.o: state.c
-	$(CC) $(CFLAGS) state.c
-
-gamepad.o: gamepad_driver/gamepad.c
-	gcc -c -g -Wall gamepad_driver/gamepad.c `sdl2-config --cflags --libs`
+	$(CC) $(CFLAGS) state.c $(LDFLAGS)
 
 
 .PHONY:clean

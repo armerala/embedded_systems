@@ -2,13 +2,15 @@
 #define __STATE_H__
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "render.h"
 #include "scene.h"
+#include "input.h"
 
 struct player_state
 {
-	uint8_t which; // player 1 or 2
+	uint8_t is_p1; // player 1 or 2
 	uint8_t health; // 0-3
 };
 
