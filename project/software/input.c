@@ -149,7 +149,7 @@ int get_axis(int axis, int is_p1)
 	if(is_p1)
 		return (axis == 0) ? p1_x_axis_prev : p1_y_axis_prev;
 	else
-		return (axis == 0) ? p2_y_axis_prev : p2_y_axis_prev;
+		return (axis == 0) ? p2_x_axis_prev : p2_y_axis_prev;
 }
 
 /**
@@ -194,9 +194,8 @@ void* __handle_joy(void* arg)
 					axis_val = x_axis_val;
 				else
 					axis_val = y_axis_val;
-					 
+					
 				*axis_val = event.jaxis.value;
-//				printf("axis val: %d\n", *axis_val);
 				break;
 
 			//case; button down -- set bit
@@ -207,9 +206,6 @@ void* __handle_joy(void* arg)
 					*input_button_bitmask |= JOY_BTN_1;
 				else if(event.jbutton.button == 1)
 					*input_button_bitmask |= JOY_BTN_2;
-
-				
-//				printf("button mask: %d\n", *input_button_bitmask);
 				break;
 
 			//case; button up -- clear bit
@@ -220,9 +216,6 @@ void* __handle_joy(void* arg)
 					*input_button_bitmask &= ~JOY_BTN_1;
 				else if(event.jbutton.button == 1)
 					*input_button_bitmask &= ~JOY_BTN_2;
-
-//				printf("button mask: %d\n", *input_button_bitmask);
-				
 				break;
 			case 256:
 				fprintf(stderr, "CTRL-C caught, exiting...\n\n");

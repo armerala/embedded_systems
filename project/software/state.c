@@ -26,10 +26,14 @@ struct scene_object* player_instantiate(int is_p1)
 		return NULL;
 	}
 
-	//assign data
+	// initialize player state, sprite data
 	state->is_p1 = (uint8_t) is_p1;
 	state->health = 3;
 	sd->magic = IDLE;
+	if (is_p1)
+		sd->flags = 0;
+	else
+		sd->flags = 1;
 
 	obj->update = &player_update;
 	obj->die = &player_destroy;
@@ -49,9 +53,55 @@ void player_destroy(struct scene_object* player_obj)
 
 void player_update(struct scene_object* player_obj)
 {
+
+	// TODO: figure out how to update health??
+
 	struct player_state *state = player_obj->state;
 
-	int b1 = get_button_down(JOY_BTN_1, state->is_p1);
-	int b2 = get_button_down(JOY_BTN_2, state->is_p1);
+	int b1down = get_button_down(JOY_BTN_1, state->is_p1);
+	int b2down = get_button_down(JOY_BTN_2, state->is_p1);
+	int b1up = get_button_up(JOY_BTN_1, state->is_p1);
+	int b2up = get_button_up(JOY_BTN_2, state->is_p1);
+	
+	int x_axis = get_axis(0,  state->is_p1);
+	int y_axis = get_axis(1, state->is_p1);
+
+	// is player dead?
+	if (state->health == 0)
+		player_obj->sd->magic = DEAD;
+
+	// buttons
+	if (b1down)
+		player_obj->sd->magic = PUNCH;
+	if (b2down)
+		player_obj->sd->magic = KICK;
+	if (b1up || b2up)
+		player_obj->sd->magic = IDLE;
+
+
+	// SDL encoding:
+	// 32767 is left,down
+	// 32768 is right,up
+
+	// axes
+	if (x_axis == 32768) {
+		player_obj->sd->magic = WALK;
+		player_obj->pos.x++;
+	}
+	if (x_axis == 32767) {
+		player_obj->sd->magic = WALK;
+		player_obj->pos.x--;
+	}
+	if (x_axis == 0) 
+		player_obj->sd->magic = IDLE;
+
+	if (y_axis == 32768) {
+		player_obj->sd->magic = JUMP;
+		player_obj->pos.y++;
+	}
+	if (y_axis == 32767) 
+		player_obj->sd->magic = DUCK;
+	if (y_axis == 0)
+		player_obj->sd->magic = IDLE;
 
 }

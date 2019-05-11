@@ -21,6 +21,7 @@ extern void update_inputs();
 extern int get_button_down(int keycode, int is_p1);
 extern int get_button_up(int keycode, int is_p1);
 extern int get_button(int keycode, int is_p1);
+extern int get_axis(int axis, int is_p1);
 
 extern void* __handle_joy(void* arg);
 

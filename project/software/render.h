@@ -6,8 +6,9 @@
 #define DUCK 1
 #define PUNCH 2
 #define KICK 3
-#define WALk 4
+#define WALK 4
 #define DEAD 5
+#define JUMP 6
 
 #define SPRITE_FLIP_X 1
 
