@@ -51,33 +51,16 @@ module fpga_top_level(
  * COMPONENTS / WIRES / REGS
  **************************************/
 
-	//img_mem i/o
-	reg image_mem_we;
-	reg [3:0] image_mem_addr;
-	wire [3:0] image_mem_dout;
+	//counters and such for loading phase
+	parameter total_bytes = `N_TOTAL_PIXELS * `PIXEL_SIZE_BYTES;
+	reg [31:0] bytes_to_load;
 
-	//fifo i/o
-	reg fifo_pop_front;
-	wire fifo_we;
-	wire [15:0] fifo_din;
-	wire [23:0] fifo_dout;
-	reg [23:0] fifo_dout_buf;
-	wire fifo_hw;
-	wire fifo_lw;
-
-	reg vga_render_queu_we;
-	
-	//sdram pausing and unpausing
+	//instance sdram controller
 	wire sdram_pause;
 	wire sdram_unpause;
 	assign sdram_pause = ((state != `FPGA_LOADING_STATE) | fifo_hw);
 	assign sdram_unpause = ((state == `FPGA_LOADING_STATE) & fifo_lw);
 
-	//counters and such for loading
-	parameter total_bytes = `N_TOTAL_PIXELS * `PIXEL_SIZE_BYTES;
-	reg [31:0] bytes_to_load;
-
-	//instance sdram controller
 	sdram_controller sdram_ctrlr(
 		.mem_dq(mem_dq),
 		.mem_cke(mem_cke),
@@ -96,6 +79,10 @@ module fpga_top_level(
 	);
 	
 	//instance image memory
+	reg image_mem_we;
+	reg [3:0] image_mem_addr;
+	wire [3:0] image_mem_dout;
+
 	memory image_mem(
 		.clk(clk50),
 		.a(image_mem_addr),
@@ -106,15 +93,36 @@ module fpga_top_level(
 	defparam image_mem.word_size = `PIXEL_SIZE_BYTES * 8;
 	defparam image_mem.n_words = `N_TOTAL_PIXELS;
 
-	//instance our vga display
+	//instance vga buffer
+	wire vga_render_q_pop_front;
+	wire vga_render_q_dout;
+	reg vga_render_q_we;
+	reg [47:0] vga_render_q_din;
+	reg [2:0] vga_render_q_chunk_n;
+	
+	fifo_buffer vga_render_q(
+		.clk(clk50),
+		.we(vga_render_q_we),
+		.pop_front(vga_render_q_pop_front),
+		.din(vga_render_q_din),
+		.dout(vga_render_q_dout),
+		.hw(),
+		.lw()
+	);
+	defparam vga_render_q.read_word_size = 48;
+	defparam vga_render_q.write_word_size = 48;
+	defparam vga_render_q.lw_mark = 1104;
+	defparam vga_render_q.hw_mark = 96;
+	defparam vga_render_q.buf_size = 1200; //48 * 25 words
+
+	//vga display
 	vga_display vga_disp(
-		//TODO: hook up data and magic number interpreation in vga display
 		.clk50(clk50),
 		.reset(reset),
-		.render_queue_we(),
-		.render_queue_din(hps_writedata),
-		.pixel_data(image_mem_dout),
-		.pixel_addr(),
+		.render_queue_pop_front(vga_render_q_pop_front),
+		.render_queue_dout(vga_render_q_dout),
+		.pixel_din(image_mem_dout),
+		.pixel_addr(image_mem_addr),
 		.VGA_R(vga_r),
 		.VGA_G(vga_g),
 		.VGA_B(vga_b),
@@ -126,6 +134,14 @@ module fpga_top_level(
 	);
 
 	//instance our fifo buffer to connect sdram and on-board 50MHz memory
+	reg fifo_pop_front;
+	wire fifo_we;
+	wire [15:0] fifo_din;
+	wire [23:0] fifo_dout;
+	reg [23:0] fifo_dout_buf;
+	wire fifo_hw;
+	wire fifo_lw;
+
 	fifo_buffer fifo_buf(
 		.clk143(clk143),
 		.we(fifo_we),
@@ -156,39 +172,67 @@ module fpga_top_level(
 	end
 
 	//synchronous state changes
-	always @(negedge clk50) begin
+	always @(posedge clk50) begin
 		state <= next_state;
 		
 		fifo_pop_front <= 1'b0;
 		image_mem_we <= 1'b0;
 	end
 
-	//do business on posgedge (e.g. reading buffer, etc.)
-	always @(posedge clk50) begin
+
+	//do business on negedge b/c memory clocks on posedge
+	always @(negedge clk50) begin
 		
 		case(state)
+			
+			//reset bytes to load and start loading
 			`FPGA_RESET_STATE : begin
-				//reset bytes to load and start loading
 				bytes_to_load <= total_bytes;
+				vga_render_q_we <= 1'b0;
 				next_state <= `FPGA_LOADING_STATE;
 			end
 			
+			//loading pixels from sdram phase
 			`FPGA_LOADING_STATE : begin
+
 				//case: continue load
 				if(bytes_to_load < total_bytes) begin
+
 					fifo_dout_buf <= fifo_dout; //prevent fifo data from changing under us
+
 					if(~fifo_lw || bytes_to_load < `FIFO_LW_MARK) begin
 						image_mem_we <= 1'b1;
 						fifo_pop_front <= 1'b1;
 						bytes_to_load <= bytes_to_load - 3;
 					end
+				end
 				//case: load done
-				else
+				else begin
 					next_state <= `FPGA_RUNNING_STATE;
 				end
 			end
 
+			//look if hps trying to tell us something
 			`FPGA_RUNNING_STATE : begin
+				if(hps_write) begin
+
+					//case: reset chunk cntr
+					if(vga_render_q_chunk_n  == 5) begin
+						vga_render_q_chunk_n <= 0;
+					end
+
+					//case do_render call
+					else if(vga_render_q_chunk_n != 0 || hps_writedata != 8'b11111111) begin
+						vga_render_q_chunk_n <= vga_render_q_chunk_n + 1;
+					end
+
+					vga_render_q_we <= 1'b1;
+					vga_render_q_din <= hps_writedata;
+
+				end
+				else begin
+					vga_render_q_we <= 1'b0;
+				end
 			end
 		endcase
 

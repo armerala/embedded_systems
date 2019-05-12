@@ -1,6 +1,6 @@
 
 module fifo_buffer(
-	input clk143,
+	input clk,
 	input we,
 	input pop_front,
 	input [write_word_size-1:0]  din,
@@ -21,11 +21,11 @@ module fifo_buffer(
 	
 	reg pop_front_internal;
 
-	always_ff @(negedge clk143) begin
+	always_ff @(negedge clk) begin
 		pop_front_internal <= pop_front;
 	end
 	
-	always_ff @(posedge clk143) begin
+	always_ff @(posedge clk) begin
 	
 		//reset signals
 		pop_front_internal <= 1'b0;
