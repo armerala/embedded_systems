@@ -65,9 +65,10 @@ void player_update(struct scene_object* player_obj)
 	int y_axis = get_axis(1, state->is_p1);
 
 	// is player dead?
-	if (state->health == 0)
+	if (state->health == 0) {
 		player_obj->sd->magic = DEAD;
-
+	}
+	
 	// buttons
 	if (b1down)
 		player_obj->sd->magic = PUNCH;
@@ -81,14 +82,18 @@ void player_update(struct scene_object* player_obj)
 	// 32767 is left,down
 	// 32768 is right,up
 
-	// axes
+
+	// axes - TODO:	 FIX THESE MAX/MIN LOCATION VALUES!!
+
 	if (x_axis == 32768) {
 		player_obj->sd->magic = WALK;
-		player_obj->pos.x++;
+		if (player_obj->pos.x != 100) 
+			player_obj->pos.x++;
 	}
 	if (x_axis == 32767) {
 		player_obj->sd->magic = WALK;
-		player_obj->pos.x--;
+		if (player_obj->pos.x != 0)
+			player_obj->pos.x--;
 	}
 	if (x_axis == 0) 
 		player_obj->sd->magic = IDLE;
@@ -111,6 +116,8 @@ void player_update(struct scene_object* player_obj)
 	if (other->pos.x == player_obj->pos.x) {
 		if (player_obj->sd->magic == KICK || player_obj->sd->magic == PUNCH) {
 			other_state->health--;
+			printf("took a hit!\n");
 		}
+		printf("they overlap!\n");
 	}
 }

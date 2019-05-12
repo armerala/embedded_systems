@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 #include "input.h"
 #include "scene.h"
 
-// GLOBAL TODO: 
-//		- figure out how to get sprite images onto board??
-//			on disk, loaded on boot? HUH
 
 static int game_done = 0;
+
 static void sig_term_handler(int sig_num)
 {
 	fprintf(stderr, "CTRL-C caught - press a joystick button to quit\n");
