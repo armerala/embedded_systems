@@ -10,16 +10,12 @@
  *    Alan Armero / aa3938 
  */
 
-
 typedef struct {
-	char x;
-	char y;
-	char spnum;
-	char pbit;
+	char magic;
+	uint16_t x;
+	uint16_t y;
+	char flags;
 } vga_display_arg_t;
-
-
-#define VGA_DISPLAY_MAGIC 'q'
 
 /* ioctls and their arguments */
 #define VGA_DISPLAY_WRITE_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_arg_t *)

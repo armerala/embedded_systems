@@ -39,11 +39,13 @@
 
 #define DRIVER_NAME "vga_display"
 
-/* Device registers */
-#define POS_X(x) (x)
-#define POS_Y(x) ((x)+1)
-#define SPNUM(x) ((x)+2)
-#define PBIT(x)  ((x)+3)
+/* Device registers (little endian) */
+#define MAGIC(x) (x)
+#define POS_X1(x) (x+1)
+#define POS_X2(x) (x+2)
+#define POS_Y1(x) ((x)+3)
+#define POS_Y2(x) ((x)+4)
+#define FLAGS(x) ((x)+5)
 
 /*
  * Information about our device
@@ -56,10 +58,12 @@ struct vga_dev {
 
 static void write_sprite(vga_display_arg_t *arg)
 {
-	iowrite8(arg->x, POS_X(dev.virtbase) );
-	iowrite8(arg->y, POS_Y(dev.virtbase) );
-	iowrite8(arg->spnum, SPNUM(dev.virtbase) );
-	iowrite8(arg->pbit, PBIT(dev.virtbase) );
+	iowrite8(arg->magic, MAGIC(dev.virtbase) );
+	iowrite8(arg->x, POS_X1(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->x)+1), POS_X2(dev.virtbase) );
+	iowrite8(arg->y, POS_Y1(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->y)+1), POS_Y2(dev.virtbase) );
+	iowrite8(arg->flags,FLAGS(dev.virtbase) );
 	dev.arg = *arg;
 }
 
