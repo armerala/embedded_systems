@@ -33,7 +33,7 @@ struct scene_object* player_instantiate(int is_p1)
 	if (is_p1)
 		sd->flags = 0;
 	else
-		sd->flags = 1;
+		sd->flags = SPRITE_FLIP_X;
 
 	obj->update = &player_update;
 	obj->die = &player_destroy;
@@ -53,8 +53,6 @@ void player_destroy(struct scene_object* player_obj)
 
 void player_update(struct scene_object* player_obj)
 {
-
-	// TODO: figure out how to update health??
 
 	struct player_state *state = player_obj->state;
 
@@ -104,4 +102,15 @@ void player_update(struct scene_object* player_obj)
 	if (y_axis == 0)
 		player_obj->sd->magic = IDLE;
 
+
+	struct scene_object *other = player_obj->other;
+
+	struct player_state *other_state = other->state;
+
+	// TODO: this shouldnt just be x==x, probably some offset/box width
+	if (other->pos.x == player_obj->pos.x) {
+		if (player_obj->sd->magic == KICK || player_obj->sd->magic == PUNCH) {
+			other_state->health--;
+		}
+	}
 }

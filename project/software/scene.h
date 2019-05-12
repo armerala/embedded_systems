@@ -3,17 +3,19 @@
 
 #include <stdlib.h>
 
+
 #include "render.h"
 #include "state.h"
 #include "vector2.h"
 
 struct scene_object
 {
-    void (*update)(struct scene_object*);       //the update procedure (takes in state and sprite data)
-	void (*die)(struct scene_object*);          //function to call to cleanup self
-    void* state;                                //the custom state data
-    struct sprite_data* sd;                     //sprite data (may be NULL if not rendered)
-	struct vec2 pos;                            //position vector (relevent even if not rendered)
+    void (*update)(struct scene_object*);       	//the update procedure (takes in state and sprite data)
+	void (*die)(struct scene_object*);          	//function to call to cleanup self
+    void* state;                                	//the custom state data
+    struct sprite_data* sd;                     	//sprite data (may be NULL if not rendered)
+	struct vec2 pos;                            	//position vector (relevent even if not rendered)
+	struct scene_object *other;		 				//pointer to other player for checking hits
 };
 
 struct scene_node
@@ -30,7 +32,7 @@ typedef struct scene_node* scene_handle;
 extern int init_scene();
 extern void shutdown_scene();
 extern void update_scene();
-extern void __do_update(struct scene_object* obj);
+extern void __do_update_scene(struct scene_object* obj);
 
 //scene add/remove
 extern scene_handle scene_add(struct scene_object* obj);
@@ -39,5 +41,6 @@ extern void __scene_remove(struct scene_node* node);
 
 //util
 extern void iter_scene( void(*func)(struct scene_object*) );
+
 
 #endif

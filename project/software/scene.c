@@ -17,6 +17,8 @@ int init_scene()
 	if(!ps1 || !ps2)
 		return -1;
 
+	ps1->other = ps2;
+	ps2->other = ps1;
 	scene_add(ps1);
 	scene_add(ps2);
 
@@ -42,12 +44,13 @@ void shutdown_scene()
 */
 void update_scene()
 {
-    iter_scene(&__do_update);
+    iter_scene(&__do_update_scene);
 }
 
-void __do_update(struct scene_object* obj)
+void __do_update_scene(struct scene_object* obj)
 {
-    obj->update(obj);
+    if (obj->update != NULL)
+		obj->update(obj);
 }
 
 /**
