@@ -21,14 +21,14 @@ module fifo_buffer(
 	
 	reg pop_front_internal;
 
-	always_ff @(negedge clk) begin
+	always_ff @(negedge clk143) begin
 		pop_front_internal <= pop_front;
 	end
 	
-	always_ff @(posedge clk) begin
+	always_ff @(posedge clk143) begin
 	
 		//reset signals
-		pop_edge_internal <= 1'b0;
+		pop_front_internal <= 1'b0;
 
 		//writing
 		if (we) begin
@@ -39,7 +39,7 @@ module fifo_buffer(
 		//reading/popping
 		dout <= mem[buf_begin +: read_word_size];
 		if(pop_front)
-			buf_begin < buf_begin + read_word_size;
+			buf_begin <= buf_begin + read_word_size;
 		
 		//end-begin dif and watermark flags
 		buf_dif <= buf_end - buf_begin;
@@ -56,4 +56,4 @@ module fifo_buffer(
 		end
 	end
 
-);
+endmodule

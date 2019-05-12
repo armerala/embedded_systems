@@ -3,7 +3,7 @@
 module memory(
 	input clk,
 	input we,
-	input [(mem_size_bytes/3)-1:0]  a,
+	input [$clog2(n_words)-1:0]  a,
 	input [word_size-1:0]  din,
 	output [word_size-1:0] dout
 );
