@@ -44,7 +44,7 @@ module fpga_top_level(
 	input [7:0]  hps_writedata,
 	input hps_write,
 	input hps_chipselect,
-	input [3:0]  hps_address
+	input [2:0]  hps_address
 );
 
 /**************************************
@@ -98,7 +98,6 @@ module fpga_top_level(
 	wire vga_render_q_dout;
 	reg vga_render_q_we;
 	reg [47:0] vga_render_q_din;
-	reg [2:0] vga_render_q_chunk_n;
 	
 	fifo_buffer vga_render_q(
 		.clk(clk50),
@@ -214,20 +213,16 @@ module fpga_top_level(
 
 			//look if hps trying to tell us something
 			`FPGA_RUNNING_STATE : begin
-				if(hps_write) begin
-
-					//case: reset chunk cntr
-					if(vga_render_q_chunk_n  == 5) begin
-						vga_render_q_chunk_n <= 0;
-					end
-
-					//case do_render call
-					else if(vga_render_q_chunk_n != 0 || hps_writedata != 8'b11111111) begin
-						vga_render_q_chunk_n <= vga_render_q_chunk_n + 1;
-					end
-
+				if(hps_write && hps_chipselect) begin
+					case(hps_address)
+						3'h0 : vga_render_q_din[47:40] <= hps_writedata;
+						3'h1 : vga_render_q_din[39:32] <= hps_writedata;
+						3'h2 : vga_render_q_din[31:24] <= hps_writedata;
+						3'h3 : vga_render_q_din[23:16] <= hps_writedata;
+						3'h4 : vga_render_q_din[15:8] <= hps_writedata;
+						3'h5 : vga_render_q_din[7:0] <= hps_writedata;
+					endcase
 					vga_render_q_we <= 1'b1;
-					vga_render_q_din <= hps_writedata;
 
 				end
 				else begin
