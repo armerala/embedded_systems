@@ -17,6 +17,14 @@
          type = "int";
       }
    }
+   element fpga_0
+   {
+      datum _sortIndex
+      {
+         value = "3";
+         type = "int";
+      }
+   }
    element hps_0
    {
       datum _sortIndex
@@ -26,14 +34,6 @@
       }
    }
    element pll_0
-   {
-      datum _sortIndex
-      {
-         value = "3";
-         type = "int";
-      }
-   }
-   element vga_display_0
    {
       datum _sortIndex
       {
@@ -63,22 +63,22 @@
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
- <interface name="clk143" internal="pll_0.outclk3" type="clock" dir="start" />
  <interface
    name="clk143_shifted"
    internal="pll_0.outclk2"
    type="clock"
    dir="start" />
- <interface name="clk49_5" internal="pll_0.outclk0" type="clock" dir="start" />
  <interface name="hps" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
- <interface name="vga" internal="vga_display_0.vga" type="conduit" dir="end" />
  <module name="clk_0" kind="clock_source" version="18.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
   <parameter name="inputClockFrequency" value="0" />
   <parameter name="resetSynchronousEdges" value="NONE" />
+ </module>
+ <module name="fpga_0" kind="fpga" version="1.0" enabled="1">
+  <parameter name="total_bytes" value="1024" />
  </module>
  <module name="hps_0" kind="altera_hps" version="18.1" enabled="1">
   <parameter name="ABSTRACT_REAL_COMPARE_TEST" value="false" />
@@ -813,21 +813,16 @@
   <parameter name="gui_switchover_mode">Automatic Switchover</parameter>
   <parameter name="gui_use_locked" value="false" />
  </module>
- <module name="vga_display_0" kind="vga_display" version="1.0" enabled="1" />
  <connection
    kind="avalon"
    version="18.1"
    start="hps_0.h2f_lw_axi_master"
-   end="vga_display_0.avalon_slave_0">
+   end="fpga_0.hps">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection
-   kind="clock"
-   version="18.1"
-   start="clk_0.clk"
-   end="vga_display_0.clock" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="fpga_0.clock50" />
  <connection
    kind="clock"
    version="18.1"
@@ -845,11 +840,16 @@
    end="hps_0.h2f_lw_axi_clock" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="pll_0.refclk" />
  <connection
+   kind="clock"
+   version="18.1"
+   start="pll_0.outclk3"
+   end="fpga_0.clock143" />
+ <connection kind="reset" version="18.1" start="clk_0.clk_reset" end="pll_0.reset" />
+ <connection
    kind="reset"
    version="18.1"
    start="clk_0.clk_reset"
-   end="vga_display_0.reset" />
- <connection kind="reset" version="18.1" start="clk_0.clk_reset" end="pll_0.reset" />
+   end="fpga_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.enableEccProtection" value="FALSE" />
  <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="FALSE" />

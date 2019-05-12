@@ -287,7 +287,7 @@ module soc_system_top(
 	.mem_cas_n(DRAM_RAS_N),
 	.mem_cs_n(DRAM_CS_N),
 	.mem_cke(DRAM_CKE),
-	.mem_clk(DRAM_CLK),
+	.clk143_shifted(DRAM_CLK),
   );
 
    // The following quiet the "no driver" warnings for output
