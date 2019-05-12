@@ -22,6 +22,7 @@ module fpga_top_level(
 	inout [15:0] mem_dq,      //sdram data line
 	output [12:0] mem_a,      //sdram address line
 	output [1:0] mem_ba,      //sdram mem bank line
+	output mem_clk,           //sdram clk out
 	output mem_cke,           //sdram clock enable
 	output mem_ldqm,          //sdram upper data bits mask
 	output mem_udqm,          //sdram upper data bits mask
@@ -77,6 +78,7 @@ module fpga_top_level(
 		.unpause(sdram_unpause),
 		.data_available(fifo_we)
 	);
+	assign mem_clk = clk143;
 	
 	//instance image memory
 	reg image_mem_we;
