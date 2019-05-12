@@ -14,7 +14,7 @@ module fifo_buffer(
 	parameter lw_mark = 128;
 	parameter buf_size = 512;
 
-	reg [$clogs(buf_size)-1:0] buf_begin;
+	reg [$clog2(buf_size)-1:0] buf_begin;
 	reg [$clog2(buf_size)-1:0] buf_end;
 	reg [$clog2(buf_size)-1:0] buf_dif;
 	reg [buf_size-1:0] mem;
