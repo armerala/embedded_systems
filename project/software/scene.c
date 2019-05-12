@@ -9,14 +9,16 @@ static struct scene_node scene_list = {&scene_list, &scene_list, NULL};
  */
 int init_scene()
 {
-    struct scene_object* ps1 = player_instantiate();
-    struct scene_object* ps2 = player_instantiate();
-	ps1->pos = (struct vec2){4, 10};
-	ps2->pos = (struct vec2){10, 10};
+    struct scene_object* ps1 = player_instantiate(1);
+    struct scene_object* ps2 = player_instantiate(0);
+	ps1->pos = (struct vec2){5, 10};
+	ps2->pos = (struct vec2){100, 10};
 
 	if(!ps1 || !ps2)
 		return -1;
 
+	ps1->other = ps2;
+	ps2->other = ps1;
 	scene_add(ps1);
 	scene_add(ps2);
 
@@ -42,12 +44,13 @@ void shutdown_scene()
 */
 void update_scene()
 {
-    iter_scene(&__do_update);
+    iter_scene(&__do_update_scene);
 }
 
-void __do_update(struct scene_object* obj)
+void __do_update_scene(struct scene_object* obj)
 {
-    obj->update(obj);
+    if (obj->update != NULL)
+		obj->update(obj);
 }
 
 /**
