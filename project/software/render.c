@@ -7,7 +7,7 @@ int init_render()
 {
 
 	// load sprites from disk to SDRAM
-	load_sprites();
+//	load_sprites();
 	
  	static const char filename[] = "/dev/fpga";
 
