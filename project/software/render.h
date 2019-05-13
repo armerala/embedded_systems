@@ -31,6 +31,7 @@ struct sprite_data
 };
 
 extern int init_render();
+extern void place_sprite(const vga_display_arg_t *arg);
 extern void __do_render(struct scene_object *obj);
 extern void render_frame();
 

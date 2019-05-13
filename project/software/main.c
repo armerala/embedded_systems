@@ -34,7 +34,7 @@ int main()
 
 	err = init_input();
 	err = init_scene() | err;
-//	err = init_render() | err;
+	err = init_render() | err;
 	
     //if(init_physics() != 0)
 	//	exit(1)
@@ -47,7 +47,7 @@ int main()
     {
         update_inputs();
         update_scene();
-	//	render_frame();		
+		render_frame();		
     }
 
 	shutdown_scene();
