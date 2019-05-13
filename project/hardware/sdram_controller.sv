@@ -88,26 +88,16 @@ module sdram_controller(
 	reg [1:0] n_data_available; //2 read burst
 	reg is_paused;
 
-	//start cke high
-	initial begin
-		mem_cke <= 1'b1;
-		mem_ldqm <= 1'b0;
-		mem_udqm <= 1'b0;
-		mem_a <= 13'b0;
-		mem_ba <= 2'b0;
-		`NOP_COMMAND;
-
-		next_state <= `SDRAM_RESET_STATE;
-	end
-
 	/**
 	 * synchronize any async inputs here
 	 */
-	always @(negedge reset_n, posedge pause, posedge unpause)
-	begin
-		if(~reset_n)
-			next_state <= `SDRAM_RESET_STATE;
+	reg reset_n_reg;
+	always @(reset_n) begin
+		reset_n_reg <= reset_n;
+	end
 
+	always @(posedge pause, posedge unpause)
+	begin
 		if(pause)
 			is_paused <= 1'b1;
 		else if(unpause)
@@ -120,53 +110,61 @@ module sdram_controller(
 	 * and in general the sram operates on the posedge, thus
 	 * we want to issue commands and such on the negedge to be on time.
 	 */
-	always @(negedge ck143)
+	always @(negedge ck143, negedge reset_n_reg)
 	begin
-
-		case(state)
-
-			//case : reset
-			`SDRAM_RESET_STATE: begin
-
-				`MODE_COMMAND;
-				img_load_counter <= 32'b0;
-				n_data_available <= 2'b0;
-				next_state <= `SDRAM_ACTIVATE_STATE;
-			end
-			
-			//case: issue activate command
-			`SDRAM_ACTIVATE_STATE : begin 
-				`ACTIVATE_COMMAND(1'b1,1'b1);
-				next_state <= `SDRAM_ISSUE_READ_STATE;
-			end
-
-			//case: issue read -- only allow arrest before issuing read
-			`SDRAM_ISSUE_READ_STATE : begin 
-				if(~is_paused) begin
-					`ISSUE_READ_COMMAND(1'b0, img_load_counter);
-					img_load_counter <= img_load_counter + 1;
-					next_state <= `SDRAM_WAIT_STATE;
-				end
-				else begin
-					`NOP_COMMAND;
-				end
-			end
 		
-			//case : wait one until data is ready
-			`SDRAM_WAIT_STATE : begin
-				`NOP_COMMAND;
-				next_state = `SDRAM_DATA_READY_STATE;
-			end
+		if(~reset_n_reg)
+			next_state <= `SDRAM_RESET_STATE;
+		else begin
+			case(state)
 
-			//case: starting spitting data and raise proper flag
-			`SDRAM_DATA_READY_STATE : begin 
-				`NOP_COMMAND;
-				n_data_available <= 2'b11;
-				data_available <= 1'b1;
-				next_state <= `SDRAM_ACTIVATE_STATE;
-			end
+				//case : reset
+				`SDRAM_RESET_STATE: begin
 
-		endcase
+					`MODE_COMMAND;
+					mem_cke <= 1'b1;
+					mem_ldqm <= 1'b0;
+					mem_udqm <= 1'b0;
+					img_load_counter <= 32'b0;
+					n_data_available = 2'b0;
+					next_state <= `SDRAM_ACTIVATE_STATE;
+				end
+				
+				//case: issue activate command
+				`SDRAM_ACTIVATE_STATE : begin 
+					`ACTIVATE_COMMAND(1'b1,1'b1);
+					next_state <= `SDRAM_ISSUE_READ_STATE;
+				end
+
+				//case: issue read -- only allow arrest before issuing read
+				`SDRAM_ISSUE_READ_STATE : begin 
+					if(~is_paused) begin
+						`ISSUE_READ_COMMAND(1'b0, img_load_counter);
+						img_load_counter <= img_load_counter + 1;
+						next_state <= `SDRAM_WAIT_STATE;
+					end
+					else begin
+						`NOP_COMMAND;
+					end
+				end
+			
+				//case : wait one until data is ready
+				`SDRAM_WAIT_STATE : begin
+					`NOP_COMMAND;
+					next_state <= `SDRAM_DATA_READY_STATE;
+				end
+
+				//case: starting spitting data and raise proper flag
+				`SDRAM_DATA_READY_STATE : begin 
+					`NOP_COMMAND;
+					n_data_available = 2'b11;
+					next_state <= `SDRAM_ACTIVATE_STATE;
+				end
+
+			endcase
+
+			data_available = (n_data_available > 2'b00) ? 1'b1 : 1'b0; 
+		end
 
 	end
 
@@ -176,17 +174,7 @@ module sdram_controller(
 	 */
 	always @(posedge ck143)
 	begin
-
 		state <= next_state;
-
-		if(n_data_available > 2'b00) begin
-			n_data_available <= n_data_available - 1'b1;
-		end
-
-		//compare to 1 b/c that means n_data_avaiable is being decremented to zero.
-		//Next neg edge data_available will be 0 then
-		data_available <= (data_available > 2'b01) ? 1'b1 : 1'b0; 
-
 	end
 
 

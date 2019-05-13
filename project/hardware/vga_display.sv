@@ -121,33 +121,37 @@ module vga_display(
 
 	//buf 1
 	reg buf1_we;
-	reg buf1_addr;
-	reg buf1_din;
-	wire buf1_dout;
+	reg [$clog2(307200)-1:0] buf1_addr;
+	reg [23:0] buf1_din;
+	wire [23:0] buf1_dout;
 	memory buf1(
-		.clk50(clk50),
+		.clk(clk50),
 		.we(buf1_we),
 		.a(buf1_addr),
 		.din(buf1_din),
 		.dout(buf1_dout)
 	);
+	defparam buf1.word_size = 24;
+	defparam buf1.n_words = 307200;
 
 	//buf 2
 	reg buf2_we;
-	reg buf2_addr;
-	reg buf2_din;
-	wire buf2_dout;
+	reg [$clog2(307200)-1:0] buf2_addr;
+	reg [23:0] buf2_din;
+	wire [23:0] buf2_dout;
 	memory buf2(
-		.clk50(clk50),
+		.clk(clk50),
 		.we(buf2_we),
 		.a(buf2_addr),
 		.din(buf2_din),
 		.dout(buf2_dout)
 	);
+	defparam buf1.word_size = 24;
+	defparam buf1.n_words = 307200;
 
 	//control which is read from
 	reg read_buf1;
-	wire read_buf_dout;
+	wire [23:0] read_buf_dout;
 	assign read_buf_dout = (read_buf1) ? buf1_dout : buf2_dout;
 
 	/*******************************
@@ -175,174 +179,185 @@ module vga_display(
 	reg [15:0] img_load_cntr_y; //counter on y
 
 	//sync reset
-	always @(posedge reset) begin
-		if(reset)
-			next_state <= `VGA_RESET;
+	reg reset_reg;
+	always @(reset) begin
+		reset_reg <= reset;
 	end
 
 	//state transitions on posedge
 	always @(posedge clk50) begin
 		state <= next_state;
-		render_queue_pop_front <= 1'b0;
-		buf1_we <= 1'b0;
-		buf2_we <= 1'b0;
 	end
 
 	//write on negedge when data is available
-	always @(negedge clk50) begin
-		
-		case(state)
+	always @(negedge clk50, posedge reset) begin
 
-			//case reset
-			`VGA_RESET : begin
-				img_magic <= 0;
-			end
+		if(reset)
+			next_state <= `VGA_RESET;
+		else begin
 
-			//queue up render requests
-			`VGA_WAITING_TO_RENDER : begin
-
-				//swap buffers
-				if(endOfField) begin
-					read_buf1 <= ~read_buf1;
-					next_state <= `VGA_INSTRUCTION_FETCH;
-				end
-
-			end
-		
-			//fetch next instruction
-			`VGA_INSTRUCTION_FETCH : begin
-
-				//pop instruction & decode instruction
+			//I want to kill myself
+			if(state != `VGA_INSTRUCTION_FETCH)
+				render_queue_pop_front <= 1'b0;
+			else
 				render_queue_pop_front <= 1'b1;
-				img_magic <= render_queue_dout[47:40];
-				img_x <= render_queue_dout[39:24];
-				img_y <= render_queue_dout[23:8];
-				img_flags <= render_queue_dout[7:0];
 
-				img_load_cntr <= 0;
-				img_load_cntr_x <= 0;
-				img_load_cntr_y <= 0;
+			case(state)
 
-				//mux out size and offset from magic
-				case(render_queue_dout[47:40])
-
-					`SPRITE_MAGIC_IDLE : begin
-						pixel_addr <= `SPRITE_OFFSET_IDLE;
-						img_size <= `SPRITE_SIZE_IDLE;
-						img_w <= `SPRITE_WIDTH_IDLE;
-						img_h <= `SPRITE_HEIGHT_IDLE;
-						img_offset_x <= (`SPRITE_WIDTH_IDLE/2);
-						img_offset_y <= (`SPRITE_HEIGHT_IDLE/2);
-					end 
-					`SPRITE_MAGIC_DUCK : begin
-						pixel_addr <= `SPRITE_OFFSET_DUCK;
-						img_size <= `SPRITE_SIZE_DUCK;
-						img_w <= `SPRITE_WIDTH_DUCK;
-						img_h <= `SPRITE_HEIGHT_DUCK;
-						img_offset_x <= (`SPRITE_WIDTH_DUCK/2);
-						img_offset_y <= (`SPRITE_HEIGHT_DUCK/2);
-					end
-					`SPRITE_MAGIC_PUNCH : begin
-						pixel_addr <= `SPRITE_OFFSET_PUNCH;
-						img_size <= `SPRITE_SIZE_PUNCH;
-						img_w <= `SPRITE_WIDTH_PUNCH;
-						img_h <= `SPRITE_HEIGHT_PUNCH;
-						img_offset_x <= (`SPRITE_WIDTH_PUNCH/2);
-						img_offset_y <= (`SPRITE_HEIGHT_PUNCH/2);
-					end
-					`SPRITE_MAGIC_KICK : begin
-						pixel_addr <= `SPRITE_OFFSET_KICK;
-						img_size <= `SPRITE_SIZE_KICK;
-						img_w <= `SPRITE_WIDTH_KICK;
-						img_h <= `SPRITE_HEIGHT_KICK;
-						img_offset_x <= (`SPRITE_WIDTH_KICK/2);
-						img_offset_y <= (`SPRITE_HEIGHT_KICK/2);
-					end
-					`SPRITE_MAGIC_WALK : begin
-						pixel_addr <= `SPRITE_OFFSET_WALK;
-						img_size <= `SPRITE_SIZE_WALK;
-						img_w <= `SPRITE_WIDTH_WALK;
-						img_h <= `SPRITE_HEIGHT_WALK;
-						img_offset_x <= (`SPRITE_WIDTH_WALK/2);
-						img_offset_y <= (`SPRITE_HEIGHT_WALK/2);
-					end
-					`SPRITE_MAGIC_DEAD : begin
-						pixel_addr <= `SPRITE_OFFSET_DEAD;
-						img_size <= `SPRITE_SIZE_DEAD;
-						img_w <= `SPRITE_WIDTH_DEAD;
-						img_h <= `SPRITE_HEIGHT_DEAD;
-						img_offset_x <= (`SPRITE_WIDTH_DEAD/2);
-						img_offset_y <= (`SPRITE_HEIGHT_DEAD/2);
-					end
-					`SPRITE_MAGIC_JUMP : begin
-						pixel_addr <= `SPRITE_OFFSET_JUMP;
-						img_size <= `SPRITE_SIZE_JUMP;
-						img_w <= `SPRITE_WIDTH_JUMP;
-						img_h <= `SPRITE_HEIGHT_JUMP;
-						img_offset_x <= (`SPRITE_WIDTH_JUMP/2);
-						img_offset_y <= (`SPRITE_HEIGHT_JUMP/2);
-					end
-					`SPRITE_MAGIC_POW : begin
-						pixel_addr <= `SPRITE_OFFSET_POW;
-						img_size <= `SPRITE_SIZE_POW;
-						img_w <= `SPRITE_WIDTH_JUMP;
-						img_h <= `SPRITE_HEIGHT_JUMP;
-						img_offset_x <= (`SPRITE_WIDTH_JUMP/2);
-						img_offset_y <= (`SPRITE_HEIGHT_JUMP/2);
-					end
-					`SPRITE_MAGIC_HEART : begin
-						pixel_addr <= `SPRITE_OFFSET_HEART;
-						img_size <= `SPRITE_SIZE_HEART;
-						img_w <= `SPRITE_WIDTH_HEART;
-						img_h <= `SPRITE_HEIGHT_HEART;
-						img_offset_x <= (`SPRITE_WIDTH_HEART/2);
-						img_offset_y <= (`SPRITE_HEIGHT_HEART/2);
-					end
-					
-				endcase
-
-				//figure next state
-				if(render_queue_dout[47:40] == `VGA_DO_RENDER)
-					next_state <= `VGA_WAITING_TO_RENDER;
-				else
-					next_state <= `VGA_RENDERING;
-
-			end
-
-			//rendering phase
-			`VGA_RENDERING : begin
-
-				if(img_load_cntr == (img_size-1))
-					next_state <= `VGA_INSTRUCTION_FETCH;
-
-				//write to b2
-				if(read_buf1) begin 
-					buf2_we <= 1'b1;
-					buf2_din  <= pixel_din;
-					buf2_addr  <= ((img_y + img_load_cntr_y) * 640) + (img_x - img_offset_x + img_load_cntr_x);
-					buf1_addr <= hcount[10:1] + vcount[9:0];
-				end
-				//write to b1
-				else begin  //write to b1
-					buf1_we <= 1'b1;
-					buf1_din  <= pixel_din;
-					buf1_addr  <= ((img_y + img_load_cntr_y) * 640) + (img_x - img_offset_x + img_load_cntr_x);
-					buf2_addr <= hcount[10:1] + vcount[9:0];
+				//case reset
+				`VGA_RESET : begin
+					img_magic <= 0;
 				end
 
-				//increment load cntrs
-				pixel_addr <= pixel_addr + 1;
-				img_load_cntr <= img_load_cntr + 1;
+				//queue up render requests
+				`VGA_WAITING_TO_RENDER : begin
 
-				if(img_load_cntr_x == (img_w-1))
-					img_load_cntr_x <= img_load_cntr_x + 1;
-				else begin
+					//swap buffers
+					if(endOfField) begin
+						read_buf1 <= ~read_buf1;
+						next_state <= `VGA_INSTRUCTION_FETCH;
+					end
+
+				end
+			
+				//fetch next instruction
+				`VGA_INSTRUCTION_FETCH : begin
+
+					//pop instruction & decode instruction
+					img_magic <= render_queue_dout[47:40];
+					img_x <= render_queue_dout[39:24];
+					img_y <= render_queue_dout[23:8];
+					img_flags <= render_queue_dout[7:0];
+
+					img_load_cntr <= 0;
 					img_load_cntr_x <= 0;
-					img_load_cntr_y <= img_load_cntr_y + 1;
-				end
-			end
+					img_load_cntr_y <= 0;
 
-		endcase //end case(state)
+					//mux out size and offset from magic
+					case(render_queue_dout[47:40])
+
+						`SPRITE_MAGIC_IDLE : begin
+							pixel_addr <= `SPRITE_OFFSET_IDLE;
+							img_size <= `SPRITE_SIZE_IDLE;
+							img_w <= `SPRITE_WIDTH_IDLE;
+							img_h <= `SPRITE_HEIGHT_IDLE;
+							img_offset_x <= (`SPRITE_WIDTH_IDLE/2);
+							img_offset_y <= (`SPRITE_HEIGHT_IDLE/2);
+						end 
+						`SPRITE_MAGIC_DUCK : begin
+							pixel_addr <= `SPRITE_OFFSET_DUCK;
+							img_size <= `SPRITE_SIZE_DUCK;
+							img_w <= `SPRITE_WIDTH_DUCK;
+							img_h <= `SPRITE_HEIGHT_DUCK;
+							img_offset_x <= (`SPRITE_WIDTH_DUCK/2);
+							img_offset_y <= (`SPRITE_HEIGHT_DUCK/2);
+						end
+						`SPRITE_MAGIC_PUNCH : begin
+							pixel_addr <= `SPRITE_OFFSET_PUNCH;
+							img_size <= `SPRITE_SIZE_PUNCH;
+							img_w <= `SPRITE_WIDTH_PUNCH;
+							img_h <= `SPRITE_HEIGHT_PUNCH;
+							img_offset_x <= (`SPRITE_WIDTH_PUNCH/2);
+							img_offset_y <= (`SPRITE_HEIGHT_PUNCH/2);
+						end
+						`SPRITE_MAGIC_KICK : begin
+							pixel_addr <= `SPRITE_OFFSET_KICK;
+							img_size <= `SPRITE_SIZE_KICK;
+							img_w <= `SPRITE_WIDTH_KICK;
+							img_h <= `SPRITE_HEIGHT_KICK;
+							img_offset_x <= (`SPRITE_WIDTH_KICK/2);
+							img_offset_y <= (`SPRITE_HEIGHT_KICK/2);
+						end
+						`SPRITE_MAGIC_WALK : begin
+							pixel_addr <= `SPRITE_OFFSET_WALK;
+							img_size <= `SPRITE_SIZE_WALK;
+							img_w <= `SPRITE_WIDTH_WALK;
+							img_h <= `SPRITE_HEIGHT_WALK;
+							img_offset_x <= (`SPRITE_WIDTH_WALK/2);
+							img_offset_y <= (`SPRITE_HEIGHT_WALK/2);
+						end
+						`SPRITE_MAGIC_DEAD : begin
+							pixel_addr <= `SPRITE_OFFSET_DEAD;
+							img_size <= `SPRITE_SIZE_DEAD;
+							img_w <= `SPRITE_WIDTH_DEAD;
+							img_h <= `SPRITE_HEIGHT_DEAD;
+							img_offset_x <= (`SPRITE_WIDTH_DEAD/2);
+							img_offset_y <= (`SPRITE_HEIGHT_DEAD/2);
+						end
+						`SPRITE_MAGIC_JUMP : begin
+							pixel_addr <= `SPRITE_OFFSET_JUMP;
+							img_size <= `SPRITE_SIZE_JUMP;
+							img_w <= `SPRITE_WIDTH_JUMP;
+							img_h <= `SPRITE_HEIGHT_JUMP;
+							img_offset_x <= (`SPRITE_WIDTH_JUMP/2);
+							img_offset_y <= (`SPRITE_HEIGHT_JUMP/2);
+						end
+						`SPRITE_MAGIC_POW : begin
+							pixel_addr <= `SPRITE_OFFSET_POW;
+							img_size <= `SPRITE_SIZE_POW;
+							img_w <= `SPRITE_WIDTH_JUMP;
+							img_h <= `SPRITE_HEIGHT_JUMP;
+							img_offset_x <= (`SPRITE_WIDTH_JUMP/2);
+							img_offset_y <= (`SPRITE_HEIGHT_JUMP/2);
+						end
+						`SPRITE_MAGIC_HEART : begin
+							pixel_addr <= `SPRITE_OFFSET_HEART;
+							img_size <= `SPRITE_SIZE_HEART;
+							img_w <= `SPRITE_WIDTH_HEART;
+							img_h <= `SPRITE_HEIGHT_HEART;
+							img_offset_x <= (`SPRITE_WIDTH_HEART/2);
+							img_offset_y <= (`SPRITE_HEIGHT_HEART/2);
+						end
+						
+					endcase
+
+					//figure next state
+					if(render_queue_dout[47:40] == `VGA_DO_RENDER)
+						next_state <= `VGA_WAITING_TO_RENDER;
+					else
+						next_state <= `VGA_RENDERING;
+				end
+
+				//rendering phase
+				`VGA_RENDERING : begin
+
+					if(img_load_cntr == (img_size-1)) begin
+						buf1_we <= 1'b0;
+						buf2_we <= 1'b0;
+						next_state <= `VGA_INSTRUCTION_FETCH;
+					end
+
+					//write to b2
+					if(read_buf1) begin 
+						buf2_we <= 1'b1;
+						buf2_din  <= pixel_din;
+						buf2_addr  <= ((img_y + img_load_cntr_y) * 640) + (img_x - img_offset_x + img_load_cntr_x);
+						buf1_addr <= hcount[10:1] + vcount[9:0];
+					end
+					//write to b1
+					else begin  //write to b1
+						buf1_we <= 1'b1;
+						buf1_din  <= pixel_din;
+						buf1_addr  <= ((img_y + img_load_cntr_y) * 640) + (img_x - img_offset_x + img_load_cntr_x);
+						buf2_addr <= hcount[10:1] + vcount[9:0];
+					end
+
+					//increment load cntrs
+					pixel_addr <= pixel_addr + 1;
+					img_load_cntr <= img_load_cntr + 1;
+
+					if(img_load_cntr_x == (img_w-1))
+						img_load_cntr_x <= img_load_cntr_x + 1;
+					else begin
+						img_load_cntr_x <= 0;
+						img_load_cntr_y <= img_load_cntr_y + 1;
+					end
+				end
+
+			endcase //end case(state)
+
+		end
+		
 	end //end always
 
 
@@ -360,7 +375,7 @@ module vga_display(
 		if (VGA_BLANK_n)
 			{VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
 		else
-			{VGA_R, VGA_G, VGA_B} <= read_buf_dout;
+			{VGA_R, VGA_G, VGA_B} = {read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
 	end
 			   
 endmodule
