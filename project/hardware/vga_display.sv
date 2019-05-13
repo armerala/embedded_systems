@@ -190,11 +190,8 @@ module vga_display(
 			next_state <= `VGA_INSTRUCTION_FETCH;
 		else begin
 
-			//I want to kill myself
-			if(state != `VGA_INSTRUCTION_FETCH)
-				render_queue_pop_front <= 1'b0;
-			else
-				render_queue_pop_front <= 1'b1;
+            //this assign sucks
+            render_queue_pop_front <= (state == `VGA_INSTRUCTION_FETCH) ? 1'b1 : 1'b0;
 
 			case(state)
 
