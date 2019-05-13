@@ -1,5 +1,5 @@
 #include "render.h"
-
+#include "sprite_loader.h"
 
 int vga_display_fd;
 
@@ -7,7 +7,7 @@ int init_render()
 {
 
 	// load sprites from disk to SDRAM
-
+	load_sprites();
 	
  	static const char filename[] = "/dev/fpga";
 
