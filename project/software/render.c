@@ -5,6 +5,10 @@ int vga_display_fd;
 
 int init_render() 
 {
+
+	// load sprites from disk to SDRAM
+
+	
  	static const char filename[] = "/dev/fpga";
 
   	if ( (vga_display_fd = open(filename, O_RDWR)) == -1) {
@@ -12,6 +16,12 @@ int init_render()
     	return -1;
  	 }
 	 return 0;
+
+
+	// send signal to load sprites from SDRAM
+	vga_display_arg_t arg;
+	arg.magic = 0xfe;
+	place_sprite(&arg);
 
 }
 
@@ -60,4 +70,9 @@ void __do_render(struct scene_object *obj)
 		heart_x++;
 		place_sprite(&arg);	
 	}
+
+	arg.magic = 0xff;
+	place_sprite(&arg);
+	fprintf(stderr, "shoulda rendered\n");
+
 }
