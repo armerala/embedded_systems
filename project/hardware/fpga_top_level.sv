@@ -1,8 +1,7 @@
 
 
-`define FPGA_RESET_STATE 2'b00
-`define FPGA_LOADING_STATE 2'b01
-`define FPGA_RUNNING_STATE 2'b10
+`define FPGA_LOADING_STATE 2'b00
+`define FPGA_RUNNING_STATE 2'b01
 
 `define FIFO_BUF_SIZE 512
 `define FIFO_HW_MARK 384
@@ -167,36 +166,22 @@ module fpga_top_level(
  * FSM DEFINITION
  **************************************/
 
-	//async reset
-	reg do_clear;
-	reg reset_reg;
-	always @(reset) begin
-		reset_reg <= reset;
-	end
-
 	//synchronous state changes
 	always @(posedge clk50) begin
 		state <= next_state;
 	end
 
 	//do business on negedge b/c memory clocks on posedge
-	always @(negedge clk50, posedge reset_reg) begin
+	always @(negedge clk50, posedge reset) begin
 
-		if(reset_reg)
-			next_state <= `FPGA_RESET_STATE;
-		else if(do_clear)
-			next_state <= `FPGA_RESET_STATE;
+		if(reset || do_clear)
+            bytes_to_load <= total_bytes;
+            vga_render_q_we <= 1'b0;
+            do_clear <= 1'b0;
+            image_mem_we <= 1'b0;
+            next_state <= `FPGA_LOADING_STATE;
 		else begin
 			case(state)
-				
-				//reset bytes to load and start loading
-				`FPGA_RESET_STATE : begin
-					bytes_to_load <= total_bytes;
-					vga_render_q_we <= 1'b0;
-					do_clear <= 1'b0;
-					image_mem_we <= 1'b0;
-					next_state <= `FPGA_LOADING_STATE;
-				end
 				
 				//loading pixels from sdram phase
 				`FPGA_LOADING_STATE : begin
@@ -235,9 +220,9 @@ module fpga_top_level(
 						endcase
 						vga_render_q_we <= 1'b1;
 						
-						//check reset
+						//check clear signal from hps
 						if(hps_address == 3'h0 && hps_writedata == 8'hfe)
-							next_state <= `FPGA_RESET_STATE;
+							do_reset <= 1'b1;
 						
 					end
 					else begin

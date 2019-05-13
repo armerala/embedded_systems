@@ -10,7 +10,6 @@
 //defines for what to do during loading operation
 
 //state for this module
-`define SDRAM_RESET_STATE 3'b000
 `define SDRAM_ACTIVATE_STATE 3'b001
 `define SDRAM_WAIT_STATE 3'b011
 `define SDRAM_ISSUE_READ_STATE 3'b010
@@ -89,14 +88,6 @@ module sdram_controller(
 	reg [1:0] n_data_available; //2 read burst
 	reg is_paused;
 
-	/**
-	 * synchronize any async inputs here
-	 */
-	reg reset_n_reg;
-	always @(reset_n) begin
-		reset_n_reg <= reset_n;
-	end
-
 	always @(posedge pause, posedge unpause)
 	begin
 		if(pause)
@@ -111,26 +102,20 @@ module sdram_controller(
 	 * and in general the sram operates on the posedge, thus
 	 * we want to issue commands and such on the negedge to be on time.
 	 */
-	always @(negedge ck143, negedge reset_n_reg, posedge clear)
+	always @(negedge ck143, negedge reset_n)
 	begin
 		
-		if(~reset_n_reg || clear)
-			next_state <= `SDRAM_RESET_STATE;
+		if(~reset_n || clear)
+            `MODE_COMMAND;
+            mem_cke <= 1'b1;
+            mem_ldqm <= 1'b0;
+            mem_udqm <= 1'b0;
+            img_load_counter <= 32'b0;
+            n_data_available = 2'b0;
+            next_state <= `SDRAM_ACTIVATE_STATE;
 		else begin
 			case(state)
 
-				//case : reset
-				`SDRAM_RESET_STATE: begin
-
-					`MODE_COMMAND;
-					mem_cke <= 1'b1;
-					mem_ldqm <= 1'b0;
-					mem_udqm <= 1'b0;
-					img_load_counter <= 32'b0;
-					n_data_available = 2'b0;
-					next_state <= `SDRAM_ACTIVATE_STATE;
-				end
-				
 				//case: issue activate command
 				`SDRAM_ACTIVATE_STATE : begin 
 					`ACTIVATE_COMMAND(1'b1,1'b1);

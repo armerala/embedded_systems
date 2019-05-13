@@ -8,7 +8,7 @@ module memory(
 	output [word_size-1:0] dout
 );
 	parameter word_size = 24;
-	parameter n_words = 512; //TODO: total words needed
+	parameter n_words = 512;
 
 	reg [word_size-1:0] mem [n_words-1:0];
 

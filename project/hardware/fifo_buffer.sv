@@ -1,7 +1,7 @@
 
 module fifo_buffer(
 	input clk,
-	input clear,
+	input clear, //should be a syncronous input
 	input we,
 	input pop_front,
 	input [write_word_size-1:0]  din,

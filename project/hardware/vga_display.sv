@@ -11,7 +11,6 @@
  *   	Alan Armero / aa3938
  */
 
-`define VGA_RESET 2'b00
 `define VGA_WAITING_TO_RENDER 2'b00
 `define VGA_INSTRUCTION_FETCH 2'b00
 `define VGA_RENDERING 2'b10
@@ -21,18 +20,18 @@
 /*****************************
  * IMAGE LOAD DEFINES
  *****************************/
-`define VGA_DO_RENDER (8'b11111111) //gets placed where image magic normally would be
+`define VGA_DO_RENDER (8'hff) //gets placed where image magic normally would be
 
 //magics
-`define SPRITE_MAGIC_IDLE (8'h0)
-`define SPRITE_MAGIC_DUCK (8'h1)
-`define SPRITE_MAGIC_PUNCH (8'h2)
-`define SPRITE_MAGIC_KICK (8'h3)
-`define SPRITE_MAGIC_WALK (8'h4)
-`define SPRITE_MAGIC_DEAD (8'h5)
-`define SPRITE_MAGIC_JUMP (8'h6)
-`define SPRITE_MAGIC_POW (8'h7)
-`define SPRITE_MAGIC_HEART (8'h8)
+`define SPRITE_MAGIC_IDLE (8'h00)
+`define SPRITE_MAGIC_DUCK (8'h01)
+`define SPRITE_MAGIC_PUNCH (8'h02)
+`define SPRITE_MAGIC_KICK (8'h03)
+`define SPRITE_MAGIC_WALK (8'h04)
+`define SPRITE_MAGIC_DEAD (8'h05)
+`define SPRITE_MAGIC_JUMP (8'h06)
+`define SPRITE_MAGIC_POW (8'h07)
+`define SPRITE_MAGIC_HEART (8'h08)
 
 //flags
 `define SPRITE_FLAG_FLIP_X (8'b 00000001)
@@ -178,12 +177,6 @@ module vga_display(
 	reg [15:0] img_load_cntr_x; //counter on x
 	reg [15:0] img_load_cntr_y; //counter on y
 
-	//sync reset
-	reg reset_reg;
-	always @(reset) begin
-		reset_reg <= reset;
-	end
-
 	//state transitions on posedge
 	always @(posedge clk50) begin
 		state <= next_state;
@@ -193,7 +186,8 @@ module vga_display(
 	always @(negedge clk50, posedge reset) begin
 
 		if(reset)
-			next_state <= `VGA_RESET;
+            img_magic <= 0;
+			next_state <= `VGA_INSTRUCTION_FETCH;
 		else begin
 
 			//I want to kill myself
@@ -204,14 +198,8 @@ module vga_display(
 
 			case(state)
 
-				//case reset
-				`VGA_RESET : begin
-					img_magic <= 0;
-				end
-
 				//queue up render requests
 				`VGA_WAITING_TO_RENDER : begin
-
 					//swap buffers
 					if(endOfField) begin
 						read_buf1 <= ~read_buf1;
@@ -371,12 +359,18 @@ module vga_display(
 	vga_counters counters(.clk50(clk50),.*);
 
 	//assign final output
+    assign VGA_R[7:0] = (~VGA_BLANK_n) ? 8'h01 : 8'hff ;
+    assign VGA_G[7:0] = (~VGA_BLANK_n) ? 8'h01 : 8'h01 ;
+    assign VGA_B[7:0] = (~VGA_BLANK_n) ? 8'hff : 8'h01 ;
+    //{read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
+    /*
 	always_comb begin
 		if (~VGA_BLANK_n)
 			{VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'hf};
 		else
-			{VGA_R, VGA_G, VGA_B} = {8'hf, 8'h0, 8'h0}; //{read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
+			{VGA_R, VGA_G, VGA_B} = {8'hf, 8'h0, 8'h0}; 
 	end
+    */
 			   
 endmodule
 
