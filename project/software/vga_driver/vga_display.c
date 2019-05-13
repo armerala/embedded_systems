@@ -37,7 +37,7 @@
 
 #include "vga_display.h"
 
-#define DRIVER_NAME "vga_display"
+#define DRIVER_NAME "fpga"
 
 /* Device registers (little endian) */
 #define MAGIC(x) (x)
@@ -157,7 +157,7 @@ static int vga_display_remove(struct platform_device *pdev)
 /* Which "compatible" string(s) to search for in the Device Tree */
 #ifdef CONFIG_OF
 static const struct of_device_id vga_display_of_match[] = {
-	{ .compatible = "csee4840,vga_display-1.0" },
+	{ .compatible = "csee4840,fpga-1.0" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, vga_display_of_match);

@@ -2,7 +2,7 @@
 #define _VGA_DISPLAY_H
 
 #include <linux/ioctl.h>
-
+#include <linux/types.h>
 
 /* Name/UNI:
  *    Daniel Mesko / dpm2153
@@ -10,10 +10,23 @@
  *    Alan Armero / aa3938 
  */
 
+#define VGA_DISPLAY_MAGIC 'q'
+
+#define SPRITE_IDLE 0
+#define SPRITE_DUCK 1
+#define SPRITE_PUNCH 2
+#define SPRITE_KICK 3
+#define SPRITE_WALK 4
+#define SPRITE_DEAD 5
+#define SPRITE_JUMP 6
+#define SPRITE_POW 7
+#define SPRITE_HEART 8
+
+
 typedef struct {
 	char magic;
-	uint16_t x;
-	uint16_t y;
+	unsigned short int x;
+	unsigned short int y;
 	char flags;
 } vga_display_arg_t;
 

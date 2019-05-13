@@ -1,7 +1,17 @@
 #ifndef __RENDER_H__
 #define __RENDER_H__
 
-//define the magic #s for rendering
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
+
+#include "scene.h"
+#include "state.h"
+#include "vga_driver/vga_display.h"
+
+//define the magic #s for behavior
 #define IDLE 0
 #define DUCK 1
 #define PUNCH 2
@@ -10,7 +20,9 @@
 #define DEAD 5
 #define JUMP 6
 
+
 #define SPRITE_FLIP_X 1
+
 
 struct sprite_data
 {
@@ -18,7 +30,8 @@ struct sprite_data
 	char flags; //e.g. flip bit etc.
 };
 
-extern void init_render();
-extern void do_render();
+extern int init_render();
+extern void __do_render(struct scene_object *obj);
+extern void render_frame();
 
 #endif

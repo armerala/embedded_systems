@@ -17,7 +17,7 @@ scene.o: scene.c
 	$(CC) $(CFLAGS) scene.c $(LDFLAGS)
 
 render.o: render.c
-	$(CC) $(CFLAGS) render.c
+	$(CC) $(CFLAGS) render.c $(LDFLAGS)
 
 state.o: state.c
 	$(CC) $(CFLAGS) state.c $(LDFLAGS)

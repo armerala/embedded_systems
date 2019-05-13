@@ -28,19 +28,20 @@ void place_sprite(const vga_display_arg_t *arg)
 
 int main()
 {
-  static const char filename[] = "/dev/vga_display";
+
+  static const char filename[] = "/dev/fpga";
 
   vga_display_arg_t vla[2];
   vla[0].x = 3;
   vla[0].y = 10;
-  vla[0].spnum = 1;
-  vla[0].pbit = 0;
+  vla[0].magic = SPRITE_IDLE;
+  vla[0].flags = 0;
 
 
   vla[1].x = 10;
   vla[1].y = 10;
-  vla[1].spnum = 0;
-  vla[1].pbit = 0;
+  vla[1].magic = SPRITE_IDLE;
+  vla[1].flags = 1;
 
   int dx0,dy0,dx1,dy1;
 
@@ -80,7 +81,6 @@ int main()
   	place_sprite(&vla[0]);
 	place_sprite(&vla[1]);
 
-	printf("1.x == %d, 1.y == %d, 2.x == %d, 2.y == %d\n", vla[0].x, vla[0].y, vla[1].x, vla[1].y);
 
     usleep(20000);
 
