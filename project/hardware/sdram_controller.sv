@@ -111,7 +111,7 @@ module sdram_controller(
 	 * and in general the sram operates on the posedge, thus
 	 * we want to issue commands and such on the negedge to be on time.
 	 */
-	always @(negedge ck143, negedge reset_n_reg)
+	always @(negedge ck143, negedge reset_n_reg, posedge clear)
 	begin
 		
 		if(~reset_n_reg || clear)
