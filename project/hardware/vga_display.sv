@@ -187,10 +187,11 @@ module vga_display(
 
 		if(reset)
             img_magic <= 0;
+            render_queue_pop_front <= 1'b0;
 			next_state <= `VGA_INSTRUCTION_FETCH;
 		else begin
 
-            //this assign sucks
+            //this assign sucks but fine
             render_queue_pop_front <= (state == `VGA_INSTRUCTION_FETCH) ? 1'b1 : 1'b0;
 
 			case(state)
