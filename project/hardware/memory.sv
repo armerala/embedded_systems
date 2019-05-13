@@ -10,7 +10,7 @@ module memory(
 	parameter word_size = 24;
 	parameter n_words = 512; //TODO: total words needed
 
-	reg [n_words-1:0] mem [word_size-1:0];
+	reg [word_size-1:0] mem [n_words-1:0];
 
 	always_ff @(posedge clk) begin
 		if (we) mem[a] <= din;

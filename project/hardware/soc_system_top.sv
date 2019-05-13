@@ -277,17 +277,17 @@ module soc_system_top(
 	 .vga_blank_n (VGA_BLANK_N),
 	 .vga_sync_n (VGA_SYNC_N),
 
-	.mem_dq(DRAM_DQ),
-	.mem_a(DRAM_ADDR),
-	.mem_ba(DRAM_BA),
-	.mem_we_n(DRAM_WE_N),
-	.mem_udqm(DRAM_UDQM),
-	.mem_ldqm(DRAM_LDQM),
-	.mem_ras_n(DRAM_RAS_N),
-	.mem_cas_n(DRAM_RAS_N),
-	.mem_cs_n(DRAM_CS_N),
-	.mem_cke(DRAM_CKE),
-	.clk143_shifted(DRAM_CLK),
+	.sdram_dq(DRAM_DQ),
+	.sdram_a(DRAM_ADDR),
+	.sdram_ba(DRAM_BA),
+	.sdram_we_n(DRAM_WE_N),
+	.sdram_udqm(DRAM_UDQM),
+	.sdram_ldqm(DRAM_LDQM),
+	.sdram_ras_n(DRAM_RAS_N),
+	.sdram_cas_n(DRAM_CAS_N),
+	.sdram_cs_n(DRAM_CS_N),
+	.sdram_cke(DRAM_CKE),
+	.clk143_shifted_clk(DRAM_CLK),
   );
 
    // The following quiet the "no driver" warnings for output

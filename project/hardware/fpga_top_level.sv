@@ -69,7 +69,7 @@ module fpga_top_level(
 		.mem_udqm(mem_udqm),
 		.mem_we_n(mem_we_n),
 		.mem_cas_n(mem_cas_n),
-		.mem_raw_n(mem_ras_n),
+		.mem_ras_n(mem_ras_n),
 		.mem_cs_n(mem_cs_n),
 		.ck143(clk143),
 		.reset_n(reset_n),
@@ -128,8 +128,8 @@ module fpga_top_level(
 		.VGA_CLK(vga_clk), 
 		.VGA_HS(vga_hs),
 		.VGA_VS(vga_vs),
-		.VGA_BLANK_N(vga_blank_n),
-		.VGA_SYNC_N(vga_sync_n)
+		.VGA_BLANK_n(vga_blank_n),
+		.VGA_SYNC_n(vga_sync_n)
 	);
 
 	//instance our fifo buffer to connect sdram and on-board 50MHz memory
@@ -142,7 +142,7 @@ module fpga_top_level(
 	wire fifo_lw;
 
 	fifo_buffer fifo_buf(
-		.clk143(clk143),
+		.clk(clk143),
 		.we(fifo_we),
 		.pop_front(fifo_pop_front),
 		.din(fifo_din),
@@ -164,73 +164,78 @@ module fpga_top_level(
  * FSM DEFINITION
  **************************************/
 
-	//async reset to sync reset
-	always @(posedge reset) begin
-		if(reset)
-			next_state <= `FPGA_RESET_STATE;
+	//async reset
+	reg reset_reg;
+	always @(reset) begin
+		reset_reg <= reset;
 	end
 
 	//synchronous state changes
 	always @(posedge clk50) begin
 		state <= next_state;
-		
-		fifo_pop_front <= 1'b0;
-		image_mem_we <= 1'b0;
 	end
 
-
 	//do business on negedge b/c memory clocks on posedge
-	always @(negedge clk50) begin
-		
-		case(state)
-			
-			//reset bytes to load and start loading
-			`FPGA_RESET_STATE : begin
-				bytes_to_load <= total_bytes;
-				vga_render_q_we <= 1'b0;
-				next_state <= `FPGA_LOADING_STATE;
-			end
-			
-			//loading pixels from sdram phase
-			`FPGA_LOADING_STATE : begin
+	always @(negedge clk50, posedge reset_reg) begin
 
-				//case: continue load
-				if(bytes_to_load < total_bytes) begin
+		if(reset_reg)
+			next_state <= `FPGA_RESET_STATE;
+		else begin
+			case(state)
+				
+				//reset bytes to load and start loading
+				`FPGA_RESET_STATE : begin
+					bytes_to_load <= total_bytes;
+					vga_render_q_we <= 1'b0;
+					next_state <= `FPGA_LOADING_STATE;
+					image_mem_we <= 1'b0;
+				end
+				
+				//loading pixels from sdram phase
+				`FPGA_LOADING_STATE : begin
 
-					fifo_dout_buf <= fifo_dout; //prevent fifo data from changing under us
+					//case: continue load
+					if(bytes_to_load < total_bytes) begin
 
-					if(~fifo_lw || bytes_to_load < `FIFO_LW_MARK) begin
-						image_mem_we <= 1'b1;
-						fifo_pop_front <= 1'b1;
-						bytes_to_load <= bytes_to_load - 3;
+						fifo_dout_buf <= fifo_dout; //prevent fifo data from changing under us
+
+						if(~fifo_lw || bytes_to_load < `FIFO_LW_MARK) begin
+							image_mem_we <= 1'b1;
+							fifo_pop_front <= 1'b1;
+							bytes_to_load <= bytes_to_load - 3;
+						end 
+						else begin
+							image_mem_we <= 1'b0;
+							fifo_pop_front <= 1'b0;
+						end
+					end
+					//case: load done
+					else begin
+						next_state <= `FPGA_RUNNING_STATE;
 					end
 				end
-				//case: load done
-				else begin
-					next_state <= `FPGA_RUNNING_STATE;
-				end
-			end
 
-			//look if hps trying to tell us something
-			`FPGA_RUNNING_STATE : begin
-				if(hps_write && hps_chipselect) begin
-					case(hps_address)
-						3'h0 : vga_render_q_din[47:40] <= hps_writedata;
-						3'h1 : vga_render_q_din[39:32] <= hps_writedata;
-						3'h2 : vga_render_q_din[31:24] <= hps_writedata;
-						3'h3 : vga_render_q_din[23:16] <= hps_writedata;
-						3'h4 : vga_render_q_din[15:8] <= hps_writedata;
-						3'h5 : vga_render_q_din[7:0] <= hps_writedata;
-					endcase
-					vga_render_q_we <= 1'b1;
+				//look if hps trying to tell us something
+				`FPGA_RUNNING_STATE : begin
+					if(hps_write && hps_chipselect) begin
+						case(hps_address)
+							3'h0 : vga_render_q_din[47:40] <= hps_writedata;
+							3'h1 : vga_render_q_din[39:32] <= hps_writedata;
+							3'h2 : vga_render_q_din[31:24] <= hps_writedata;
+							3'h3 : vga_render_q_din[23:16] <= hps_writedata;
+							3'h4 : vga_render_q_din[15:8] <= hps_writedata;
+							3'h5 : vga_render_q_din[7:0] <= hps_writedata;
+						endcase
+						vga_render_q_we <= 1'b1;
 
+					end
+					else begin
+						vga_render_q_we <= 1'b0;
+					end
 				end
-				else begin
-					vga_render_q_we <= 1'b0;
-				end
-			end
-		endcase
 
+			endcase
+		end
 	end
 
 endmodule
