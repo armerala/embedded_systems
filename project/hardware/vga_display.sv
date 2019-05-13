@@ -372,10 +372,10 @@ module vga_display(
 
 	//assign final output
 	always_comb begin
-		if (VGA_BLANK_n)
-			{VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
+		if (~VGA_BLANK_n)
+			{VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'hf};
 		else
-			{VGA_R, VGA_G, VGA_B} = {read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
+			{VGA_R, VGA_G, VGA_B} = {8'hf, 8'h0, 8'h0}; //{read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
 	end
 			   
 endmodule
