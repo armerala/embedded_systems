@@ -73,6 +73,7 @@ module fpga_top_level(
 		.mem_cs_n(mem_cs_n),
 		.ck143(clk143),
 		.reset_n(reset_n),
+		.clear(do_clear),
 		.pause(sdram_pause),
 		.unpause(sdram_unpause),
 		.data_available(fifo_we)
@@ -101,6 +102,7 @@ module fpga_top_level(
 	
 	fifo_buffer vga_render_q(
 		.clk(clk50),
+		.clear(do_clear),
 		.we(vga_render_q_we),
 		.pop_front(vga_render_q_pop_front),
 		.din(vga_render_q_din),
@@ -143,6 +145,7 @@ module fpga_top_level(
 
 	fifo_buffer fifo_buf(
 		.clk(clk143),
+		.clear(do_clear),
 		.we(fifo_we),
 		.pop_front(fifo_pop_front),
 		.din(fifo_din),
@@ -165,6 +168,7 @@ module fpga_top_level(
  **************************************/
 
 	//async reset
+	reg do_clear;
 	reg reset_reg;
 	always @(reset) begin
 		reset_reg <= reset;
@@ -180,6 +184,8 @@ module fpga_top_level(
 
 		if(reset_reg)
 			next_state <= `FPGA_RESET_STATE;
+		else if(do_clear)
+			next_state <= `FPGA_RESET_STATE;
 		else begin
 			case(state)
 				
@@ -187,8 +193,9 @@ module fpga_top_level(
 				`FPGA_RESET_STATE : begin
 					bytes_to_load <= total_bytes;
 					vga_render_q_we <= 1'b0;
-					next_state <= `FPGA_LOADING_STATE;
+					do_clear <= 1'b0;
 					image_mem_we <= 1'b0;
+					next_state <= `FPGA_LOADING_STATE;
 				end
 				
 				//loading pixels from sdram phase
@@ -227,7 +234,11 @@ module fpga_top_level(
 							3'h5 : vga_render_q_din[7:0] <= hps_writedata;
 						endcase
 						vga_render_q_we <= 1'b1;
-
+						
+						//check reset
+						if(hps_address == 3'h0 && hps_writedata == 8'hfe)
+							next_state <= `FPGA_RESET_STATE;
+						
 					end
 					else begin
 						vga_render_q_we <= 1'b0;

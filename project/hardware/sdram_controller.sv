@@ -76,6 +76,7 @@ module sdram_controller(
 	//interface our modules
 	input ck143,                  //clk (should be same as used by sdram)
 	input reset_n,                //reset signal -negative
+	input clear,
 	input pause,                  //pause (e.g. if output buffer is full)
 	input unpause,                //unpause signal
 	output reg data_available     //amount of data available
@@ -113,7 +114,7 @@ module sdram_controller(
 	always @(negedge ck143, negedge reset_n_reg)
 	begin
 		
-		if(~reset_n_reg)
+		if(~reset_n_reg || clear)
 			next_state <= `SDRAM_RESET_STATE;
 		else begin
 			case(state)
