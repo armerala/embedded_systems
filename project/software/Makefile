@@ -2,7 +2,7 @@ CC=gcc
 LDFLAGS=-pthread `sdl2-config --cflags --libs`
 CFLAGS = -c -g -Wall
 
-OBJS=main.o input.o scene.o render.o state.o #gamepad.o
+OBJS=main.o input.o scene.o render.o state.o sprite_loader.o
 
 strEEtfight: $(OBJS)
 	$(CC) -g -Wall $(OBJS) -o strEEtfight $(LDFLAGS)
@@ -21,6 +21,9 @@ render.o: render.c
 
 state.o: state.c
 	$(CC) $(CFLAGS) state.c $(LDFLAGS)
+
+sprite_loader.o: sprite_loader.c
+	$(CC) $(CFLAGS) sprite_loader.c
 
 
 .PHONY:clean

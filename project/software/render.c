@@ -3,12 +3,20 @@
 
 int vga_display_fd;
 
+
+void place_sprite(const vga_display_render_t *arg)
+{
+	vga_display_arg_t vla;
+	vla.render = *arg;
+	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
+		perror("ioctl for ball position failed");
+		return;
+	}
+
+
+}
 int init_render() 
 {
-
-	// load sprites from disk to SDRAM
-//	load_sprites();
-	
  	static const char filename[] = "/dev/fpga";
 
   	if ( (vga_display_fd = open(filename, O_RDWR)) == -1) {
@@ -17,23 +25,12 @@ int init_render()
  	 }
 	 return 0;
 
-
-	// send signal to load sprites from SDRAM
-	vga_display_arg_t arg;
-	arg.magic = 0xfe;
-	place_sprite(&arg);
+	// load sprites into memory via load-sprite ioctls
+	load_sprites(vga_display_fd);
 
 }
 
-void place_sprite(const vga_display_arg_t *arg)
-{
-	vga_display_arg_t vla;
-	vla = *arg;
-	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
-		perror("ioctl for ball position failed");
-		return;
-	}
-}
+
 void render_frame()
 {
 	iter_scene(&__do_render);
@@ -43,13 +40,13 @@ void __do_render(struct scene_object *obj)
 {
 	struct player_state *state = obj->state;
 	
-	vga_display_arg_t arg;
-	arg.magic = obj->sd->magic;
-	arg.x = obj->pos.x;
-	arg.y = obj->pos.y;
-	arg.flags = obj->sd->flags;
+	vga_display_render_t render_obj;
+	render_obj.magic = obj->sd->magic;
+	render_obj.x = obj->pos.x;
+	render_obj.y = obj->pos.y;
+	render_obj.flags = obj->sd->flags;
 
-	place_sprite(&arg);
+	place_sprite(&render_obj);
 
 	int i;
 	int heart_x; 
@@ -60,19 +57,18 @@ void __do_render(struct scene_object *obj)
 		heart_x = 20;
 	
 
-	arg.magic = SPRITE_HEART;
-	arg.flags = 0;
-	arg.y = 5; // TODO: change hardcoded heart y value
+	render_obj.magic = SPRITE_HEART;
+	render_obj.flags = 0;
+	render_obj.y = 5; // TODO: change hardcoded heart y value
 
 	for (i=0; i < state->health; i++)
 	{
-		arg.x = heart_x;
+		render_obj.x = heart_x;
 		heart_x++;
-		place_sprite(&arg);	
+		place_sprite(&render_obj);	
 	}
 
-	arg.magic = 0xff;
-	place_sprite(&arg);
-	fprintf(stderr, "shoulda rendered\n");
+	render_obj.magic = 0xff;
+	place_sprite(&render_obj);
 
 }

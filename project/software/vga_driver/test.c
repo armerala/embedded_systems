@@ -18,7 +18,7 @@ void load_pixel(const vga_display_arg_t *arg)
 {
 	vga_display_arg_t vla;
 	vla = *arg;
-	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
+	if (ioctl(vga_display_fd, VGA_DISPLAY_LOAD_PIXEL, &vla)) {
 		perror("ioctl for ball position failed");
 		return;
 	}
@@ -52,6 +52,7 @@ int main()
   load_arg.r = 152;
   load_arg.g = 99;
   load_arg.b = 69;
+  load_arg.magic = 0xfd;
   for(i = 0 ; i < 200000; i++) {
 	  load_arg.addr = i;
 	  arg.load = load_arg;
@@ -103,6 +104,8 @@ int main()
 	arg.render = vla[0];
   	place_sprite(&arg);
 	arg.render = vla[1];
+	place_sprite(&arg);
+	vla[1].magic = 0xff;
 	place_sprite(&arg);
 
 

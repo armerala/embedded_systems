@@ -28,7 +28,7 @@ typedef struct {
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
-	unsigned short int addr;
+	unsigned int addr;
 } vga_display_load_t;
 
 typedef struct {
