@@ -20,7 +20,7 @@ static void die(char *msg, FILE * in_fp)
 
 
 
-void read_and_load(const char *filename, int vga_display_fd)
+struct sprite *read_and_load(const char *filename, int vga_display_fd)
 {
 	FILE *in_fp;
 
@@ -76,8 +76,6 @@ void read_and_load(const char *filename, int vga_display_fd)
 
 	unsigned int addr = 0;
 
-	vga_display_load_t load;
-	vga_display_arg_t arg;
 
 	// Account for padding at the end of rows (multiples of 4 bytes)
 	row_length = (ih.biWidth * sizeof(pd));
@@ -87,29 +85,32 @@ void read_and_load(const char *filename, int vga_display_fd)
 	// Set pixels_remainder
 	pixel_remainder = abs(ih.biWidth * ih.biHeight);
 
+	struct sprite *sprite;
+	unsigned char *pixel_data;
+	int data_size;
 
-	load.magic = 0xfd;
+	sprite = (struct sprite *)malloc(sizeof(struct sprite));
+
+	fprintf(stderr, "malloc'd %d for sprite table\n", sizeof(struct sprite));
+	sprite->width = ih.biWidth;
+	sprite->height = ih.biHeight; 
 	
+	data_size = ih.biWidth * ih.biHeight * 24;
+	
+	pixel_data = malloc(data_size);
+	fprintf(stderr, "malloc'd %d for pixel data\n", data_size);
+	sprite->pixel_data = pixel_data;
+		
+	unsigned char *iterator = pixel_data;	
 	while (pixel_remainder > 0) {
 		
 		// Read the pixels from input file
 		if (fread(&pd, 1, sizeof(pd), in_fp) != sizeof(pd))
 			die("failed to read pixel data", in_fp);
 
-
-		pixel_remainder--;
-
-		load.r = pd.r;
-		load.g = pd.g;
-		load.b = pd.g;
-		load.addr = addr;
-		
-		arg.load = load;
-
-		if (ioctl(vga_display_fd, VGA_DISPLAY_LOAD_PIXEL, &arg))
-			die("ioctl for load pixel failed", in_fp);
-
-		addr++;
+		*iterator++ = pd.r;
+		*iterator++ = pd.g;
+		*iterator++ = pd.b;
 
 		// Decrement row_remainder, add pad bytes if necessary
 		if (row_padding != 4) {
@@ -124,20 +125,12 @@ void read_and_load(const char *filename, int vga_display_fd)
 	}
 
 	fclose(in_fp);
+	return sprite;
 }
 
-void load_sprites(int vga_display_fd)
+struct sprite *load_sprites(const char *filename, int vga_display_fd)
 {
-	int i;
 
-	const char *filenames[9] = 
-		{ "sprite_bmp/dead.bmp", "sprite_bmp/duck.bmp", "sprite_bmp/float.bmp",
-		  "sprite_bmp/heart.bmp", "sprite_bmp/idle.bmp", "sprite_bmp/kick.bmp",
-		  "sprite_bmp/pow.bmp", "sprite_bmp/punch.bmp", "sprite_bmp/walk.bmp" };
-
-
-	for (i = 0; i < sizeof(filenames); i++) {
-		read_and_load(filenames[i], vga_display_fd);
-	}
+	read_and_load(filename, vga_display_fd);
 
 }

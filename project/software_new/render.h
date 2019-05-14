@@ -30,8 +30,19 @@ struct sprite_data
 	char flags; //e.g. flip bit etc.
 };
 
+
+struct render_object 
+{
+	char magic;
+	char flags;
+	unsigned char x;
+	unsigned char y;
+};
+
+
 extern int init_render();
-extern void place_sprite(const vga_display_render_t *arg);
+extern void shutdown_render();
+extern void place_sprite(const struct render_object *arg);
 extern void __do_render(struct scene_object *obj);
 extern void render_frame();
 

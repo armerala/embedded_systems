@@ -32,8 +32,17 @@ struct __attribute__((__packed__)) pixel_data {
 	unsigned char r;
 } ;
 
-extern void load_sprites(int vga_display_fd);
-extern void read_and_load(const char *filename, int vga_display_fd);
+
+struct sprite
+{
+	int width;
+	int height;
+	unsigned char *pixel_data;
+};
+
+
+extern struct sprite *load_sprites(const char *filename, int vga_display_fd);
+extern struct sprite *read_and_load(const char *filename, int vga_display_fd);
 
 
 #endif

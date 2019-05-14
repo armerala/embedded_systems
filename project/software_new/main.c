@@ -32,7 +32,8 @@ int main()
     /*the big init*/
 	int err;
 
-	err = init_input();
+err = 0;
+//	err = init_input();
 	err = init_scene() | err;
 	err = init_render() | err;
 	
@@ -52,6 +53,6 @@ int main()
 
 	shutdown_scene();
 	shutdown_input();
-
+	shutdown_render();
     return 0;
 }
