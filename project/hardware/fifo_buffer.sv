@@ -1,20 +1,19 @@
 
-module fifo_buffer(
-	input clk,
+module fifo_buffer
+	#(parameter write_word_size = 16,
+	parameter read_word_size = 24,
+	parameter hw_mark = 384,
+	parameter lw_mark = 128,
+	parameter buf_size = 512)	
+	(input clk,
 	input clear, //should be a syncronous input
 	input we,
 	input pop_front,
 	input [write_word_size-1:0]  din,
-	output [read_word_size-1:0] dout,
+	output reg [read_word_size-1:0] dout,
 	output reg buf_hw, //high watermark (buffer almost full)
 	output reg buf_lw  //low watermak (buffer almost empty)
 );
-	parameter write_word_size = 16;
-	parameter read_word_size = 24;
-	parameter hw_mark = 384;
-	parameter lw_mark = 128;
-	parameter buf_size = 512;
-
 	reg [$clog2(buf_size)-1:0] buf_begin;
 	reg [$clog2(buf_size)-1:0] buf_end;
 	reg [$clog2(buf_size)-1:0] buf_dif;
