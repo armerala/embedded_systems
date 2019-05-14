@@ -102,9 +102,16 @@ module vga_display(
 	reg [15:0] img_load_cntr_x; //counter on x
 	reg [15:0] img_load_cntr_y; //counter on y
 
+	reg [7:0] vga_r;
+	reg [7:0] vga_g;
+	reg [7:0] vga_b;
+
 	//state transitions on posedge
 	always @(posedge clk50) begin
 		state <= next_state;
+		vga_r <= read_buf_dout[23:16];
+		vga_g <= read_buf_dout[15:8];
+		vga_b <= read_buf_dout[7:0];
 	end
 
 	//write on negedge when data is available
@@ -239,19 +246,25 @@ module vga_display(
 						next_state <= `VGA_INSTRUCTION_FETCH;
 					end
 
-					//write to b2
+					//write to b2 and destructive read on b1
 					if(read_buf1) begin 
 						buf2_we <= 1'b1;
 						buf2_din  <= pixel_din;
 						buf2_addr  <= ((img_y + img_load_cntr_y) * 640) + (img_x - img_offset_x + img_load_cntr_x);
-						buf1_addr <= hcount[10:1] + vcount[9:0];
+
+						buf1_we <= 1'b1;
+						buf1_din <= 24'h0;
+						buf1_addr <= hcount[10:1] + (vcount[9:0] * 640);
 					end
-					//write to b1
-					else begin  //write to b1
+					//write to b1 && destructive write to b2
+					else begin  
 						buf1_we <= 1'b1;
 						buf1_din  <= pixel_din;
 						buf1_addr  <= ((img_y + img_load_cntr_y) * 640) + (img_x - img_offset_x + img_load_cntr_x);
-						buf2_addr <= hcount[10:1] + vcount[9:0];
+
+						buf2_we <= 1'b1;
+						buf2_din <= 24'h0;
+						buf2_addr <= hcount[10:1] + (vcount[9:0] * 640);
 					end
 
 					//increment load cntrs
@@ -283,9 +296,9 @@ module vga_display(
 	vga_counters counters(.clk50(clk50),.*);
 
 	//assign final output
-    assign VGA_R[7:0] = (~VGA_BLANK_n) ? 8'h01 : read_buf_dout[23:16];
-    assign VGA_G[7:0] = (~VGA_BLANK_n) ? 8'h01 : read_buf_dout[15:8];
-    assign VGA_B[7:0] = (~VGA_BLANK_n) ? 8'hff : read_buf_dout[7:0];
+    assign VGA_R[7:0] = (~VGA_BLANK_n) ? 8'h01 : vga_r; 
+    assign VGA_G[7:0] = (~VGA_BLANK_n) ? 8'h01 : vga_g;
+    assign VGA_B[7:0] = (~VGA_BLANK_n) ? 8'hff : vga_b;
     //{read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
     /*
 	always_comb begin
