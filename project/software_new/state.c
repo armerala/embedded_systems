@@ -28,7 +28,7 @@ struct scene_object* player_instantiate(int is_p1)
 
 	// initialize player state, sprite data
 	state->is_p1 = (uint8_t) is_p1;
-	state->health = 3;
+	state->health =	(char) 3;
 	sd->magic = IDLE;
 	if (is_p1)
 		sd->flags = 0;
@@ -39,7 +39,7 @@ struct scene_object* player_instantiate(int is_p1)
 	obj->die = &player_destroy;
 	obj->state = state;
 	obj->sd = sd;
-	obj->pos = (struct vec2){0, 0};
+	obj->pos = (struct vec2){0.0, 0.0};
 
 	return obj;
 }
@@ -57,6 +57,8 @@ void player_update(struct scene_object* player_obj)
 	int DIFF_TEST = 0;
 
 	struct player_state *state = player_obj->state;
+	struct scene_object *other = player_obj->other;
+	struct player_state *other_state = other->state;
 
 	int b1down = get_button_down(JOY_BTN_1, state->is_p1);
 	int b2down = get_button_down(JOY_BTN_2, state->is_p1);
@@ -69,6 +71,8 @@ void player_update(struct scene_object* player_obj)
 	// is player dead?
 	if (state->health == 0) {
 		player_obj->sd->magic = DEAD;
+		state->health = 3;
+		other_state->health = 3;
 	}
 	
 	// buttons
@@ -76,11 +80,11 @@ void player_update(struct scene_object* player_obj)
 		player_obj->sd->magic = PUNCH;
 		DIFF_TEST=1;
 	}
-	if (b2down) {
+	else if (b2down) {
 		player_obj->sd->magic = KICK;
 		DIFF_TEST=1;
 	}
-	if (b1up || b2up) {
+	else if (b1up || b2up) {
 		player_obj->sd->magic = IDLE;
 		DIFF_TEST=1;
 	}
@@ -97,51 +101,39 @@ void player_update(struct scene_object* player_obj)
 
 	if (x_axis == 32768) {
 		player_obj->sd->magic = WALK;
-		if (player_obj->pos.x != 150) 
-			player_obj->pos.x++;
+		if (player_obj->pos.x != 120) 
+			player_obj->pos.x = player_obj->pos.x + 0.0002;
 
-		DIFF_TEST=1;
 	}
-	if (x_axis == 32767) {
+	else if (x_axis == 32767) {
 		player_obj->sd->magic = WALK;
 		if (player_obj->pos.x != 0)
-			player_obj->pos.x--;
-		DIFF_TEST=1;
+			player_obj->pos.x = player_obj->pos.x - 0.0002;
 	}
-	if (x_axis == 0) 
+	else if (x_axis == 0 && b1up && b2up) 
 		player_obj->sd->magic = IDLE;
 
 	if (y_axis == 32768) {
 		player_obj->sd->magic = JUMP;
-		player_obj->pos.y++;
-		DIFF_TEST=1;
+//		player_obj->pos.y++;
 	}
-	if (y_axis == 32767) { 
+	else if (y_axis == 32767) { 
 		player_obj->sd->magic = DUCK;
-		DIFF_TEST=1;
 	}
-	if (y_axis == 0)
+	else if (y_axis == 0 && b1up && b2up)
 		player_obj->sd->magic = IDLE;
 
 
-	struct scene_object *other = player_obj->other;
-
-	struct player_state *other_state = other->state;
-
-	int width = 10;
-
-	// TODO: this shouldnt just be x==x, probably some offset/box width
-	if (other->pos.x == player_obj->pos.x  ) {
-		if (player_obj->sd->magic == KICK || player_obj->sd->magic == PUNCH) {
+	if ((other->pos.x + 3) >= player_obj->pos.x && (other->pos.x - 3) <= player_obj->pos.x  ) {
+		if (b1down || b2down) {
 			other_state->health--;
-			printf("took a hit!\n");
+//			printf("took a hit!\n");
 		}
-		printf("they overlap!\n");
 	}
 
 	if (DIFF_TEST) {
-		fprintf(stderr, "Player sprite: %d\nPlayer position: %d,%d\nPlayer health; %d\n\n", 
-			player_obj->sd->magic, player_obj->pos.x, player_obj->pos.y, state->health);
+//		fprintf(stderr, "Player sprite: %d\nPlayer position: %f,%f\nPlayer health; %d\n\n", 
+//			player_obj->sd->magic, player_obj->pos.x, player_obj->pos.y, state->health);
 	}
 	
 

@@ -89,7 +89,8 @@ int init_render()
 //	for (i = 0; i < 9; i++) {
 //		sprites[i] = load_sprites(filenames[i], vga_display_fd);
 //	}
-//	return 0;
+	
+	return 0;
 
 }
 
@@ -123,10 +124,10 @@ void __do_render(struct scene_object *obj)
 
 
 	vga_display_arg_t arg;
-	arg.p1_x = obj->pos.x;
-	arg.p1_y = obj->pos.y;
-	arg.p2_x = other_obj->pos.x;
-	arg.p2_y = other_obj->pos.y;
+	arg.p1_x = (unsigned char) (truncf(obj->pos.x));
+	arg.p1_y = (unsigned char) (truncf(obj->pos.y));
+	arg.p2_x = (unsigned char) (truncf(other_obj->pos.x));
+	arg.p2_y = (unsigned char) (truncf(other_obj->pos.y));
 	arg.p1_health = state->health;
 	arg.p2_health = other_state->health;
 

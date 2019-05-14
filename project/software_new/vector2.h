@@ -5,8 +5,8 @@
 
 struct vec2
 {
-	int16_t x;
-	int16_t y;
+	float x;
+	float y;
 };
 
 inline struct vec2 vec2_add(struct vec2 a, struct vec2 b)
