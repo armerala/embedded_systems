@@ -67,23 +67,23 @@ struct vga_dev {
 
 static void write_sprite(vga_display_render_arg_t *arg)
 {
-	iowrite8(arg->pix, PIX1(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->pix)+1), PIX2(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->pix)+2), PIX3(dev.virtbase) );
-	iowrite8(arg->addr, ADDR1(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->addr)+1), ADDR2(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->addr)+2), ADDR3(dev.virtbase) );
-	dev.arg = *arg;
-}
-
-static void load_sprite(vga_display_load_arg_t *arg)
-{
 	iowrite8(arg->magic, MAGIC(dev.virtbase) );
 	iowrite8(arg->x, POS_X1(dev.virtbase) );
 	iowrite8(*((uint8_t*)(&arg->x)+1), POS_X2(dev.virtbase) );
 	iowrite8(arg->y, POS_Y1(dev.virtbase) );
 	iowrite8(*((uint8_t*)(&arg->y)+1), POS_Y2(dev.virtbase) );
 	iowrite8(arg->flags,FLAGS(dev.virtbase) );
+	dev.arg = *arg;
+}
+
+static void load_pixel(vga_display_load_arg_t *arg)
+{
+	iowrite8(arg->pix, PIX1(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->pix)+1), PIX2(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->pix)+2), PIX3(dev.virtbase) );
+	iowrite8(arg->addr, ADDR1(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->addr)+1), ADDR2(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->addr)+2), ADDR3(dev.virtbase) );
 	dev.arg = *arg;
 }
 
@@ -104,11 +104,11 @@ static long vga_display_ioctl(struct file *f, unsigned int cmd, unsigned long ar
 		write_sprite(&vla);
 		break;
 
-	case VGA_DISPLAY_LOAD_SPRITE:
+	case VGA_DISPLAY_LOAD_PIXEL:
 		if (copy_from_user(&vla, (vga_display_load_arg_t *) arg,
 				   sizeof(vga_display_load_arg_t)))
 			return -EACCES;
-		load_sprite(&vla);
+		load_pixel(&vla);
 		break;
 
 	default:

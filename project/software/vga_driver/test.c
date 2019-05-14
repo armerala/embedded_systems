@@ -14,7 +14,7 @@
 
 int vga_display_fd;
 
-void load_rand(const vga_display_load_arg_t *arg)
+void load_pixel(const vga_display_load_arg_t *arg)
 {
 	vga_display_write_arg_t vla;
 	vla = *arg;
@@ -55,7 +55,7 @@ int main()
   }
 
   //place some sprites (one is flipped)
-  vga_display_write_arg_t vla[2];
+  vga_display_render_arg_t vla[2];
   vla[0].x = 0;
   vla[0].y = 0;
   vla[0].magic = SPRITE_IDLE;

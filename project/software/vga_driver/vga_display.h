@@ -35,7 +35,7 @@ typedef struct {
 
 /* ioctls and their arguments */
 #define VGA_DISPLAY_WRITE_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_render_arg_t *)
-#define VGA_DISPLAY_LOAD_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_load_arg_t *)
+#define VGA_DISPLAY_LOAD_PIXEL _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_load_arg_t *)
 
 
 #endif
