@@ -122,6 +122,8 @@ struct sprite *read_and_load(const char *filename, int vga_display_fd)
 				row_remainder = row_length;
 			}
 		}
+		pixel_remainder--;
+
 	}
 
 	fclose(in_fp);
