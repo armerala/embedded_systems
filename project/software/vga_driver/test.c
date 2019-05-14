@@ -37,9 +37,24 @@ void place_sprite(const vga_display_write_arg_t *arg)
 
 int main()
 {
-
+ 
+  //open the dev
   static const char filename[] = "/dev/fpga";
+  if ( (vga_display_fd = open(filename, O_RDWR)) == -1) {
+    fprintf(stderr, "could not open %s\n", filename);
+    return -1;
+  }
 
+  //load some pixel
+  uint32_t i;
+  vga_display_load_arg_t load_arg;
+  load_arg.pix = 0x00f0f0;
+  for(i = 0 ; i < 200000; i++) {
+	  load_arg.addr = i;
+      load_sprite(&load_arg);
+  }
+
+  //place some sprites (one is flipped)
   vga_display_write_arg_t vla[2];
   vla[0].x = 0;
   vla[0].y = 0;
@@ -61,12 +76,6 @@ int main()
   dy1 = rand() % 2 * 2 -1;
 
   srand(time(NULL));
-
-
-  if ( (vga_display_fd = open(filename, O_RDWR)) == -1) {
-    fprintf(stderr, "could not open %s\n", filename);
-    return -1;
-  }
 
   for ( ;; )
   {
