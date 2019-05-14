@@ -47,7 +47,6 @@ module vga_display(input logic        clk,
 	 3'h5 : p2_health <= writedata;
        endcase
 
-// TODO: Add heart logic
 
    always_comb begin
 	if (((hcount[10:3] >= p1_x - 3) && (hcount[10:3] <= p1_x + 3)) &&
@@ -56,6 +55,24 @@ module vga_display(input logic        clk,
 	else if (((hcount[10:3] >= p2_x - 3) && (hcount[10:3] <= p2_x + 3)) &&
 		((vcount[9:2] >= p2_y -3 ) && (vcount[9:2] <= p2_y + 3)) )
 	  {VGA_R, VGA_G, VGA_B} = {8'h00, 8'h00, 8'hff};
+	else if ((((hcount[10:3] >= 15 - 2) && (hcount[10:3] <= 15 + 2)) &&
+		((vcount[9:2] >= 10 -3 ) && (vcount[9:2] <= 10 + 3))) && p1_health >= 1 ) 
+		 {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'hff};
+	else if ((((hcount[10:3] >= 25 - 2) && (hcount[10:3] <= 25 + 2)) &&
+		((vcount[9:2] >= 10 -3 ) && (vcount[9:2] <= 10 + 3))) && p1_health >= 2 )
+		 {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'hff};
+	else if ((((hcount[10:3] >= 35 - 2) && (hcount[10:3] <= 35 + 2)) &&
+		((vcount[9:2] >= 10 -3 ) && (vcount[9:2] <= 10 + 3))) && p1_health == 3 ) 
+		 {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'hff};
+	else if ((((hcount[10:3] >= 100 - 2) && (hcount[10:3] <= 100 + 2)) &&
+		((vcount[9:2] >= 10 -3 ) && (vcount[9:2] <= 10 + 3))) && p2_health >= 1 ) 
+		 {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'hff};
+	else if ((((hcount[10:3] >= 110 - 2) && (hcount[10:3] <= 110 + 2)) &&
+		((vcount[9:2] >= 10 -3 ) && (vcount[9:2] <= 10 + 3))) && p2_health >= 2 ) 
+		 {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'hff};
+	else if ((((hcount[10:3] >= 120 - 2) && (hcount[10:3] <= 120 + 2)) &&
+		((vcount[9:2] >= 10 -3 ) && (vcount[9:2] <= 10 + 3))) && p2_health == 3 ) 
+		 {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'hff};
 	else	
 		{VGA_R, VGA_G, VGA_B} =
              {8'h00, 8'h00, 8'h00};
