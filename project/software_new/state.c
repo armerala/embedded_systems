@@ -113,7 +113,7 @@ void player_update(struct scene_object* player_obj)
 	else if (x_axis == 0 && b1up && b2up) 
 		player_obj->sd->magic = IDLE;
 
-	if (y_axis == 32768) {
+	else if (y_axis == 32768) {
 		player_obj->sd->magic = JUMP;
 //		player_obj->pos.y++;
 	}
@@ -124,7 +124,8 @@ void player_update(struct scene_object* player_obj)
 		player_obj->sd->magic = IDLE;
 
 
-	if ((other->pos.x + 7) >= player_obj->pos.x && (other->pos.x - 7) <= player_obj->pos.x  ) {
+	if (((other->pos.x + 7) >= player_obj->pos.x) && ((other->pos.x - 7) <= player_obj->pos.x) 
+			&& (other->sd->magic != JUMP )) {
 		if (b1down || b2down) {
 			other_state->health--;
 //			printf("took a hit!\n");

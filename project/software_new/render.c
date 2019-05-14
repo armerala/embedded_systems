@@ -133,5 +133,44 @@ void __do_render(struct scene_object *obj)
 
 	call_vga(&arg);
 
+	float f, dummy_pos;
+	if (obj->sd->magic == JUMP) {
+		dummy_pos = arg.p1_y;
+
+		for (f = 9.0; f >= 0; f-=0.0001) {
+			 dummy_pos -= 0.0001;
+			 arg.p1_y = (unsigned char) (truncf(dummy_pos));
+			 call_vga(&arg);
+		}
+
+		for (f = 0; f <= 9.0; f+=0.0001) {
+			 dummy_pos += 0.0001;
+			 arg.p1_y = (unsigned char) (truncf(dummy_pos));
+			 call_vga(&arg);
+		}
+
+		obj->sd->magic = IDLE;
+
+
+	}
+	if (other_obj->sd->magic == JUMP) {
+		dummy_pos = arg.p2_y;
+
+		for (f = 9.0; f > 0; f-=0.0001) {
+			 dummy_pos -= 0.0001;
+			 arg.p2_y = (unsigned char) (truncf(dummy_pos));
+			 call_vga(&arg);
+		}
+
+		for (f = 0; f < 9.0; f+=0.0001) {
+			 dummy_pos += 0.0001;
+			 arg.p2_y = (unsigned char) (truncf(dummy_pos));
+			 call_vga(&arg);
+		}
+
+		other_obj->sd->magic = IDLE;
+	}
+
+	
 
 }
