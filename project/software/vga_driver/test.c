@@ -14,10 +14,19 @@
 
 int vga_display_fd;
 
-
-void place_sprite(const vga_display_arg_t *arg)
+void load_rand(const vga_display_load_arg_t *arg)
 {
-	vga_display_arg_t vla;
+	vga_display_write_arg_t vla;
+	vla = *arg;
+	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
+		perror("ioctl for ball position failed");
+		return;
+	}
+}
+
+void place_sprite(const vga_display_write_arg_t *arg)
+{
+	vga_display_write_arg_t vla;
 	vla = *arg;
 	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
 		perror("ioctl for ball position failed");
@@ -31,9 +40,9 @@ int main()
 
   static const char filename[] = "/dev/fpga";
 
-  vga_display_arg_t vla[2];
-  vla[0].x = 3;
-  vla[0].y = 10;
+  vga_display_write_arg_t vla[2];
+  vla[0].x = 0;
+  vla[0].y = 0;
   vla[0].magic = SPRITE_IDLE;
   vla[0].flags = 0;
 
