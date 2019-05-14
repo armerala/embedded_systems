@@ -14,6 +14,7 @@ struct scene_object
 	void (*die)(struct scene_object*);          	//function to call to cleanup self
     void* state;                                	//the custom state data
     struct sprite_data* sd;                     	//sprite data (may be NULL if not rendered)
+    //struct collider* collider;                     	//physics collider (may be null if no physics)
 	struct vec2 pos;                            	//position vector (relevent even if not rendered)
 	struct scene_object *other;		 				//pointer to other player for checking hits
 };
