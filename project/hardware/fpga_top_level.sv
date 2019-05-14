@@ -90,32 +90,38 @@ module fpga_top_level(
 		.VGA_SYNC_n(vga_sync_n)
 	);
 
+	reg [7:0] current_op;
 
 	//do business on negedge b/c memory clocks on posedge
-	always @(negedge clk50, posedge reset, posedge do_clear) begin
+	always @(negedge clk50, posedge reset) begin
 
-		if(reset || do_clear) begin
-            vga_render_q_we <= 1'b0;
-            do_clear <= 1'b0;
-            image_mem_we <= 1'b0;
+		//reset internal signals
+		if(vga_render_q_we)
+			vga_render_q_we <= 1'b0;
+		if(image_mem_we)
+			image_mem_we <= 1'b0;
+		if(~use_image_read_addr)
 			use_image_read_addr <= 1'b1;
-		end
+		if(do_clear)
+			do_clear <= 1'b0;
 
-		else if(hps_write && hps_chipselect) begin
+		//figure out what to do
+		if(hps_write && hps_chipselect) begin
+			
+			//cache the current op from first 8 bits
+			if(hps_address == 3'h0) begin
+				current_op <= hps_writedata;
+				if(hps_writedata != 8'hfd && hps_writedata != 8'hfe )
+					vga_render_q_din[47:40] <= hps_writedata;
+			end
 
 			//check for clear
-			if(hps_address == 3'h0 && hps_writedata == 8'hfe) begin
+			else if (current_op == 8'hfe) begin
 				do_clear <= 1'b1;
-				image_mem_we <= 1'b0;
-				vga_render_q_we <= 1'b1;
-				use_image_read_addr <= 1'b1;
 			end
-			//check for write
-			else if(hps_address == 3'h0 && hps_writedata == 8'hfd) begin
 
-				image_mem_we <= 1'b1;
-				vga_render_q_we <= 1'b0;
-				use_image_read_addr <= 1'b0;
+			//check for load pixel
+			else if(current_op == 8'hfd) begin
 
 				case(hps_address)
 					3'h1 : image_mem_din[23:16] <= hps_writedata;
@@ -123,24 +129,24 @@ module fpga_top_level(
 					3'h3 : image_mem_din[7:0] <= hps_writedata;
 					3'h4 : image_mem_write_addr[19:16] <= hps_writedata;
 					3'h5 : image_mem_write_addr[15:8] <= hps_writedata;
-					3'h6 : image_mem_write_addr[7:0] <= hps_writedata;
+					3'h6 : begin 
+						image_mem_write_addr[7:0] <= hps_writedata; 
+						image_mem_we <= 1'b1; 
+						use_image_read_addr <= 1'b0; 
+					end
 				endcase
 
 			end
+
 			//check for render request
 			else begin 
 
-				image_mem_we <= 1'b0;
-				vga_render_q_we <= 1'b1;
-				use_image_read_addr <= 1'b1;
-
 				case(hps_address)
-					3'h0 : vga_render_q_din[47:40] <= hps_writedata;
 					3'h1 : vga_render_q_din[39:32] <= hps_writedata;
 					3'h2 : vga_render_q_din[31:24] <= hps_writedata;
 					3'h3 : vga_render_q_din[23:16] <= hps_writedata;
 					3'h4 : vga_render_q_din[15:8] <= hps_writedata;
-					3'h5 : vga_render_q_din[7:0] <= hps_writedata;
+					3'h5 : begin vga_render_q_din[7:0] <= hps_writedata; vga_render_q_we <= 1'b1; end
 				endcase
 
 			end
