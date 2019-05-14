@@ -13,6 +13,7 @@ static void sig_term_handler(int sig_num)
 {
 	fprintf(stderr, "CTRL-C caught - press a joystick button to quit\n");
 	game_done = 1;
+	exit(1);
 }
 
 int main()

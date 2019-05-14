@@ -23,50 +23,22 @@
 #define SPRITE_HEART 8
 
 
-typedef struct {
-	unsigned char magic; 	//0xfd is load, 0xfe is render
-	unsigned char r;
-	unsigned char g;
-	unsigned char b;
-	unsigned int addr;
-} vga_display_load_t;
 
 typedef struct {
-	unsigned char magic;
-	unsigned short int x;
-	unsigned short int y;
-	char flags;
-} vga_display_render_t;
-
-
-typedef struct {
-	unsigned char r;
-	unsigned char g;
-	unsigned char b;
-	unsigned char pos_x;
-	unsigned char pos_y;
-} vga_display_pixel_t;
-
-
-
-
-typedef struct {
-	vga_display_load_t load;
-	vga_display_render_t render;
-	vga_display_pixel_t pixel;
+	unsigned char p1_x;
+	unsigned char p1_y;
+	unsigned char p2_x;
+	unsigned char p2_y;
+	unsigned char p1_health;
+	unsigned char p2_health;
 } vga_display_arg_t;
 
 
-extern void write_sprite(vga_display_render_t *arg);
-extern void load_sprite(vga_display_load_t *arg);
-extern void write_pixel(vga_display_pixel_t *arg);
+extern void place_players(vga_display_arg_t *arg);
 
 
 /* ioctls and their arguments */
-#define VGA_DISPLAY_WRITE_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_arg_t *)
-#define VGA_DISPLAY_LOAD_PIXEL _IOW(VGA_DISPLAY_MAGIC, 2, vga_display_arg_t *)
-
-#define VGA_DISPLAY_WRITE_PIXEL _IOW(VGA_DISPLAY_MAGIC, 3, vga_display_arg_t *)
+#define VGA_DISPLAY_PLACE_PLAYERS _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_arg_t *)
 
 
 #endif

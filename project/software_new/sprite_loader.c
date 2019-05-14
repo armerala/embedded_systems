@@ -74,8 +74,6 @@ struct sprite *read_and_load(const char *filename, int vga_display_fd)
 	unsigned int row_remainder;
 	unsigned short row_padding;
 
-	unsigned int addr = 0;
-
 
 	// Account for padding at the end of rows (multiples of 4 bytes)
 	row_length = (ih.biWidth * sizeof(pd));
@@ -91,8 +89,8 @@ struct sprite *read_and_load(const char *filename, int vga_display_fd)
 
 	sprite = (struct sprite *)malloc(sizeof(struct sprite));
 
-	sprite->width = ih.biWidth;
-	sprite->height = ih.biHeight; 
+	sprite->width = abs(ih.biWidth);
+	sprite->height = abs(ih.biHeight); 
 	
 	data_size = ih.biWidth * ih.biHeight * 3;
 	
@@ -131,6 +129,6 @@ struct sprite *read_and_load(const char *filename, int vga_display_fd)
 struct sprite *load_sprites(const char *filename, int vga_display_fd)
 {
 
-	read_and_load(filename, vga_display_fd);
+	return read_and_load(filename, vga_display_fd);
 
 }

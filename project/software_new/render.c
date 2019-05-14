@@ -1,5 +1,4 @@
 #include "render.h"
-#include "sprite_loader.h"
 
 
 // globals
@@ -13,6 +12,18 @@ const char *filenames[9] =
 		  "sprite_bmp/jump.bmp", "sprite_bmp/pow.bmp", "sprite_bmp/heart.bmp" };
 
 
+void call_vga(vga_display_arg_t *arg)
+{
+	vga_display_arg_t vla;
+	vla = *arg;
+
+	if (ioctl(vga_display_fd, VGA_DISPLAY_PLACE_PLAYERS, &vla)) {
+		perror("ioctl for sprite write failed");
+		exit(1);
+	}
+}
+
+/*
 void place_sprite(const struct render_object *arg)
 {
 
@@ -22,23 +33,48 @@ void place_sprite(const struct render_object *arg)
 	char flip_bit = arg->flags; 
 
 
+	struct sprite *sp;
+	unsigned char *iterator;
 	
-	// will read r,g,b for each pixel, render at x,y with an offset
-	// 		if flip_bit, will read them backwards
+	int row_count = 0;
+	int column_count = 0;
 
-	// so sprite_loader needs to malloc sprite_data and send
-	// 		pointers back to render.c
+	sp = sprites[magic];
+	iterator = sp->pixel_data;
 
-	// 	need to structure this data somehow
 
-//	vga_display_arg_t vla;
-//	vla.render = *arg;
-//	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
-//		perror("ioctl for ball position failed");
-//		return;
-//	}
+// TODO: add flip bit logic
 
+	vga_display_pixel_t pixel;
+	while (row_count <= sp->height) {
+		pixel.r = *iterator++;
+		pixel.g = *iterator++;
+		pixel.b = *iterator++;
+		
+		pixel.pos_x = x;
+		pixel.pos_x = y;
+
+		call_vga(&pixel);
+
+		x++;
+		column_count++;
+
+		if (column_count > sp->width) {
+			column_count = 0;
+			row_count++;
+			y++;
+			x = arg->x;
+		}
+
+		usleep(10000);	
+	}
 }
+	
+*/	
+
+
+
+
 int init_render() 
 {
  	static const char filename[] = "/dev/vga_display";
@@ -49,11 +85,11 @@ int init_render()
  	 }
 
 	// load sprites into memory
-	int i;
-	for (i = 0; i < 9; i++) {
-		sprites[i] = load_sprites(filenames[i], vga_display_fd);
-	}
-	return 0;
+//	int i;
+//	for (i = 0; i < 9; i++) {
+//		sprites[i] = load_sprites(filenames[i], vga_display_fd);
+//	}
+//	return 0;
 
 }
 
@@ -62,11 +98,10 @@ void shutdown_render()
 
 	// free the sprites
 	int i;
-	for (i = 0; i < sizeof(sprites); i++) {
+	for (i = 0; i < 9; i++) {
 		struct sprite *sp = sprites[i];
 		free(sp->pixel_data);
 		free(sp);
-		fprintf(stderr, "freed sprite and pixel data\n");
 	}
 }
 
@@ -75,39 +110,27 @@ void render_frame()
 	iter_scene(&__do_render);
 }
 
+
 void __do_render(struct scene_object *obj)
 {
+	
 	struct player_state *state = obj->state;
+	if (!(state->is_p1))
+		return;
 	
-	struct render_object render_obj;
-	render_obj.magic = obj->sd->magic;
-	render_obj.x = obj->pos.x;
-	render_obj.y = obj->pos.y;
-	render_obj.flags = obj->sd->flags;
+	struct scene_object *other_obj = obj->other;
+	struct player_state *other_state = other_obj->state;
 
-	place_sprite(&render_obj);
 
-	int i;
-	int heart_x; 
+	vga_display_arg_t arg;
+	arg.p1_x = obj->pos.x;
+	arg.p1_y = obj->pos.y;
+	arg.p2_x = other_obj->pos.x;
+	arg.p2_y = other_obj->pos.y;
+	arg.p1_health = state->health;
+	arg.p2_health = other_state->health;
 
-	if (state->is_p1) 
-		heart_x = 5;
-	else
-		heart_x = 20;
-	
+	call_vga(&arg);
 
-	render_obj.magic = SPRITE_HEART;
-	render_obj.flags = 0;
-	render_obj.y = 5; // TODO: change hardcoded heart y value
-
-	for (i=0; i < state->health; i++)
-	{
-		render_obj.x = heart_x;
-		heart_x++;
-		place_sprite(&render_obj);	
-	}
-
-	render_obj.magic = 0xff;
-	place_sprite(&render_obj);
 
 }

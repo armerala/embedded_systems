@@ -41,11 +41,12 @@
 
 
 // device registers
-#define R(x) (x)
-#define G(x) (x+1)
-#define B(x) (x+2)
-#define POS_X(x) (x+3)
-#define POS_Y(x) ((x)+4)
+#define P1_X(x) (x)
+#define P1_Y(x) (x+1)
+#define P2_X(x) (x+2)
+#define P2_Y(x) (x+3)
+#define P1_HEALTH(x) ((x)+4)
+#define P2_HEALTH(x) ((x)+4)
 
 
 /*
@@ -54,47 +55,23 @@
 struct vga_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
-	vga_display_render_t render;
-	vga_display_load_t load;
-	vga_display_pixel_t pixel;
+	vga_display_arg_t arg;
 } dev;
 
-
-void write_pixel(vga_display_pixel_t *arg)
+void place_players(vga_display_arg_t *arg)
 {
-	iowrite8(arg->r, R(dev.virtbase));
-	iowrite8(arg->g, G(dev.virtbase));
-	iowrite8(arg->b, B(dev.virtbase));
-	iowrite8(arg->pos_x, POS_X(dev.virtbase));
-	iowrite8(arg->pos_y, POS_Y(dev.virtbase));
-	dev.pixel = *arg;
-}
-/*
+	iowrite8(arg->p1_x, P1_X(dev.virtbase));
+	iowrite8(arg->p1_y, P1_Y(dev.virtbase) );
+	iowrite8(arg->p2_x, P2_X(dev.virtbase) );
+	iowrite8(arg->p2_y, P2_Y(dev.virtbase) );
+	iowrite8(arg->p1_health, P1_HEALTH(dev.virtbase) );
+	iowrite8(arg->p2_health, P2_HEALTH(dev.virtbase) );
+	dev.arg = *arg;
 
-void write_sprite(vga_display_render_t *arg)
-{
-	iowrite8(arg->magic, MAGIC(dev.virtbase) );
-	iowrite8(arg->x, POS_X1(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->x)+1), POS_X2(dev.virtbase) );
-	iowrite8(arg->y, POS_Y1(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->y)+1), POS_Y2(dev.virtbase) );
-	iowrite8(arg->flags,FLAGS(dev.virtbase) );
-	dev.render = *arg;
 }
 
-void load_pixel(vga_display_load_t *arg)
-{
-	iowrite8(arg->magic, MAGIC(dev.virtbase));
-	iowrite8(arg->r, PIX1(dev.virtbase) );
-	iowrite8(arg->g, PIX2(dev.virtbase) );
-	iowrite8(arg->b, PIX3(dev.virtbase) );
-	iowrite8(arg->addr, ADDR1(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->addr)+1), ADDR2(dev.virtbase) );
-	iowrite8(*((uint8_t*)(&arg->addr)+2), ADDR3(dev.virtbase) );
-	dev.load = *arg;
-}
 
-*/
+
 /*
  * Handle ioctl() calls from userspace:
  * Read or write the segments on single digits.
@@ -105,25 +82,11 @@ static long vga_display_ioctl(struct file *f, unsigned int cmd, unsigned long ar
 	vga_display_arg_t vla;
 
 	switch (cmd) {
-/*	case VGA_DISPLAY_WRITE_SPRITE:
+	case VGA_DISPLAY_PLACE_PLAYERS:
 		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
 				   sizeof(vga_display_arg_t)))
 			return -EACCES;
-		write_sprite(&(vla.render));
-		break;
-
-	case VGA_DISPLAY_LOAD_PIXEL:
-		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
-				   sizeof(vga_display_arg_t)))
-			return -EACCES;
-		load_pixel(&(vla.load));
-		break;
-*/
-	case VGA_DISPLAY_WRITE_PIXEL:
-		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
-				   sizeof(vga_display_arg_t)))
-			return -EACCES;
-		write_pixel(&(vla.pixel));
+		place_players(&vla);
 		break;
 
 	default:

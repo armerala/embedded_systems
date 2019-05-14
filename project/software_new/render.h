@@ -10,6 +10,8 @@
 #include "scene.h"
 #include "state.h"
 #include "vga_driver/vga_display.h"
+#include "sprite_loader.h"
+
 
 //define the magic #s for behavior
 #define IDLE 0
