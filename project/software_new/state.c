@@ -69,7 +69,7 @@ void player_update(struct scene_object* player_obj)
 	int y_axis = get_axis(0, state->is_p1);
 
 	// is player dead?
-	if (state->health == 0) {
+	if (state->health == -1) {
 		player_obj->sd->magic = DEAD;
 		state->health = 3;
 		other_state->health = 3;

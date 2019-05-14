@@ -11,7 +11,7 @@
 struct player_state
 {
 	uint8_t is_p1; // player 1 or 2
-	uint8_t health; // 0-3
+	int8_t health; // 0-3
 };
 
 extern struct scene_object* player_instantiate();
