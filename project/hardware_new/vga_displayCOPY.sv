@@ -23,42 +23,35 @@ module vga_display(input logic        clk,
    logic [10:0]	   hcount;
    logic [9:0]     vcount;
 
+   logic [7:0] 	   r, g, b;
 	
-   logic [7:0]	   p1_x, p1_y, p2_x, p2_y, p1_health, p2_health;
+   logic [7:0]	   pos_x, pos_y;
 
+	logic [35:0]	pixel_data;
 
    vga_counters counters(.clk50(clk), .*);
 
    always_ff @(posedge clk)
      if (reset) begin
-		p1_x <= 8'd10;
-		p1_y <= 8'd70;
-		p2_x <= 8'd80;
-		p2_y <= 8'd70;
-		p1_health <= 8'd3;
-		p2_health <= 8'd3;
+		r <= 8'hff;
+		g <= 8'h00;
+		b <= 8'hff;
      end else if (chipselect && write)
        case (address)
-	 3'h0 : p1_x <= writedata;
-	 3'h1 : p1_y <= writedata;
-	 3'h2 : p2_x <= writedata;
-	 3'h3 : p2_y <= writedata;
-	 3'h4 : p1_health <= writedata;
-	 3'h5 : p2_health <= writedata;
+	 3'h0 : r <= writedata;
+	 3'h1 : g <= writedata;
+	 3'h2 : b <= writedata;
+	 3'h3 : pos_x <= writedata;
+	 3'h4 : pos_y <= writedata;
+	 3'h5 : 
        endcase
 
-// TODO: Add heart logic
-
    always_comb begin
-	if (((hcount[10:3] >= p1_x - 3) && (hcount[10:3] <= p1_x + 3)) &&
-		((vcount[9:2] >= p1_y -3 ) && (vcount[9:2] <= p1_y + 3)) )
-	  {VGA_R, VGA_G, VGA_B} = {8'hff, 8'h00, 8'h00};
-	else if (((hcount[10:3] >= p2_x - 3) && (hcount[10:3] <= p2_x + 3)) &&
-		((vcount[9:2] >= p2_y -3 ) && (vcount[9:2] <= p2_y + 3)) )
-	  {VGA_R, VGA_G, VGA_B} = {8'h00, 8'h00, 8'hff};
-	else	
-		{VGA_R, VGA_G, VGA_B} =
-             {8'h00, 8'h00, 8'h00};
+	if ((hcount[10:3] == pos_x) && (vcount[9:2] == pos_y))
+	  {VGA_R, VGA_G, VGA_B} = {r,g,b};
+	else
+	  {VGA_R, VGA_G, VGA_B} =
+             {8'hff, 8'h00, 8'hff};
    end
 	       
 endmodule
