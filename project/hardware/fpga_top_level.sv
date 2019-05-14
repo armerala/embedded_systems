@@ -55,6 +55,7 @@ module fpga_top_level(
 	wire [47:0] vga_render_q_dout;
 	reg vga_render_q_we;
 	reg [47:0] vga_render_q_din;
+	wire lw;
 	
 	fifo_buffer vga_render_q(
 		.clk(clk50),
@@ -64,18 +65,18 @@ module fpga_top_level(
 		.din(vga_render_q_din),
 		.dout(vga_render_q_dout),
 		.buf_hw(),
-		.buf_lw()
+		.buf_lw(lw)
 	);
 	defparam vga_render_q.read_word_size = 48;
 	defparam vga_render_q.write_word_size = 48;
-	defparam vga_render_q.lw_mark = 1104;
-	defparam vga_render_q.hw_mark = 96;
+	defparam vga_render_q.lw_mark = 48;
 	defparam vga_render_q.buf_size = 1200; //48 * 25 words
 
 	//vga display
 	vga_display vga_disp(
 		.clk50(clk50),
 		.reset(reset),
+		.render_q_lw(lw),
 		.render_queue_pop_front(vga_render_q_pop_front),
 		.render_queue_dout(vga_render_q_dout),
 		.pixel_din(image_mem_dout),

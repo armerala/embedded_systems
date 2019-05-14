@@ -2,7 +2,8 @@
 
 module fpga_testbench;
 
-    reg clk, en;
+    reg clk;
+	reg reset;
     reg [7:0] hps_writedata;
     reg [2:0] hps_addr;
 	reg hps_write;
@@ -46,16 +47,23 @@ module fpga_testbench;
 
         // register setup
         clk = 0;
-		hps_write = 1;
-		hps_cs = 1;
+		reset = 1;
+
+		@(posedge clk);
+		@(posedge clk);
+	
+		reset = 0;
 
         // wait 1 clk cycle
         @(posedge clk);
         @(negedge clk);
 
+		hps_write = 1;
+		hps_cs = 1;
+
 	
 		@(negedge clk);
-        for (i=0; i<200000; i=i+1)
+        for (i=0; i<90000; i=i+1)
         begin
 			hps_writedata = 8'hfd;
 			hps_addr = 3'h0;
@@ -79,6 +87,45 @@ module fpga_testbench;
 			hps_addr = 3'h6;
 			@(negedge clk);
         end
+
+		
+		@(negedge clk);
+        for (i=0; i<15; i=i+1)
+        begin
+			hps_writedata = 8'h00;
+			hps_addr = 3'h0;
+            @(negedge clk);
+			hps_writedata = 8'h00;
+			hps_addr = 3'h1;
+            @(negedge clk);
+			hps_writedata = 8'h00;
+			hps_addr = 3'h2;
+            @(negedge clk);
+			hps_writedata = 8'h00;
+			hps_addr = 3'h3;
+            @(negedge clk);
+			hps_writedata = 8'h00;
+			hps_addr = 3'h4;
+			@(negedge clk);
+			hps_writedata = 8'h00;
+			hps_addr = 3'h5;
+			@(negedge clk);
+			hps_writedata = i;
+			hps_addr = 3'h6;
+			@(negedge clk);
+        end //do a render
+
+
+        for (i=0; i<22; i=i+1)
+		begin
+			hps_writedata = 8'hff;
+			hps_addr = 3'h0;
+			@(negedge clk);
+		end
+        for (i=0; i<90000; i=i+1)
+		begin
+			@(negedge clk);
+		end
 
         $finish;
     end

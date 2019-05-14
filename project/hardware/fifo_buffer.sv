@@ -17,10 +17,16 @@ module fifo_buffer
 	reg [$clog2(buf_size)-1:0] buf_begin;
 	reg [$clog2(buf_size)-1:0] buf_end;
 	reg [$clog2(buf_size)-1:0] buf_dif;
-	reg [buf_size-1:0] mem;
+	reg [0:buf_size-1] mem;
 	
 	reg pop_front_internal;
 	reg pull_pop_front_down;
+
+initial
+begin
+	buf_begin <= 0;
+	buf_end <= 0;
+end
 	
 	always_ff @(posedge clk) begin
 
@@ -42,7 +48,7 @@ module fifo_buffer
 			
 			//writing
 			if (we) begin
-				mem[buf_end +: write_word_size] <= din;
+				mem[buf_end +: read_word_size] <= din;
 				buf_end <= buf_end + write_word_size;
 			end
 

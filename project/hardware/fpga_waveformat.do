@@ -9,8 +9,13 @@ add wave -noupdate -radix unsigned :fpga_testbench:g
 add wave -noupdate -radix unsigned :fpga_testbench:b
 add wave -noupdate -radix unsigned :fpga_testbench:fpga:image_mem_addr
 add wave -noupdate -radix unsigned :fpga_testbench:fpga:image_mem_we
-add wave -noupdate -radix unsigned :fpga_testbench:fpga:image_mem_din
 add wave -noupdate -radix unsigned :fpga_testbench:fpga:image_mem_dout
+add wave -noupdate -radix unsigned :fpga_testbench:fpga:vga_disp:state
+add wave -noupdate -radix unsigned :fpga_testbench:fpga:vga_disp:img_load_cntr
+add wave -noupdate -radix unsigned :fpga_testbench:fpga:vga_render_q:buf_begin
+add wave -noupdate -radix unsigned :fpga_testbench:fpga:vga_render_q:buf_end
+add wave -noupdate -radix unsigned :fpga_testbench:fpga:vga_render_q:pop_front
+add wave -noupdate -radix unsigned :fpga_testbench:fpga:vga_render_q:dout
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {3 ns} 0}
 quietly wave cursor active 1

@@ -12,8 +12,8 @@
  */
 
 `define VGA_WAITING_TO_RENDER 2'b00
-`define VGA_INSTRUCTION_FETCH 2'b00
-`define VGA_RENDERING 2'b10
+`define VGA_INSTRUCTION_FETCH 2'b01
+`define VGA_RENDERING 2'b11
 `include "common.sv"
 
 
@@ -25,6 +25,7 @@ module vga_display(
 	input clk50,
 	input reset,
 
+	input render_q_lw,
     input [47:0] render_queue_dout,
 	output reg render_queue_pop_front,
 
@@ -70,8 +71,8 @@ module vga_display(
 		.din(buf2_din),
 		.dout(buf2_dout)
 	);
-	defparam buf1.word_size = 24;
-	defparam buf1.n_words = 307200;
+	defparam buf2.word_size = 24;
+	defparam buf2.n_words = 307200;
 
 	//control which is read from
 	reg read_buf1;
@@ -132,7 +133,7 @@ module vga_display(
 		else begin
 
             //this assign sucks but fine
-            render_queue_pop_front <= (state == `VGA_INSTRUCTION_FETCH) ? 1'b1 : 1'b0;
+            render_queue_pop_front <= (state == `VGA_INSTRUCTION_FETCH && !render_q_lw) ? 1'b1 : 1'b0;
 
 			case(state)
 
@@ -240,7 +241,7 @@ module vga_display(
 					//figure next state
 					if(render_queue_dout[47:40] == `VGA_DO_RENDER)
 						next_state <= `VGA_WAITING_TO_RENDER;
-					else
+					else if(render_queue_dout[47:0] <  9)
 						next_state <= `VGA_RENDERING;
 				end
 
