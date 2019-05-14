@@ -91,14 +91,12 @@ struct sprite *read_and_load(const char *filename, int vga_display_fd)
 
 	sprite = (struct sprite *)malloc(sizeof(struct sprite));
 
-	fprintf(stderr, "malloc'd %d for sprite table\n", sizeof(struct sprite));
 	sprite->width = ih.biWidth;
 	sprite->height = ih.biHeight; 
 	
 	data_size = ih.biWidth * ih.biHeight * 3;
 	
 	pixel_data = malloc(data_size);
-	fprintf(stderr, "malloc'd %d for pixel data\n", data_size);
 	sprite->pixel_data = pixel_data;
 		
 	unsigned char *iterator = pixel_data;	

@@ -8,7 +8,7 @@ int vga_display_fd;
 static struct sprite *sprites[9];
 
 const char *filenames[9] = 
-		{ "sprite_bmp/idle1.bmp", "sprite_bmp/duck.bmp", "sprite_bmp/punch.bmp",
+		{ "sprite_bmp/idle.bmp", "sprite_bmp/duck.bmp", "sprite_bmp/punch.bmp",
 		  "sprite_bmp/kick.bmp", "sprite_bmp/walk.bmp", "sprite_bmp/dead.bmp",
 		  "sprite_bmp/jump.bmp", "sprite_bmp/pow.bmp", "sprite_bmp/heart.bmp" };
 
@@ -48,11 +48,9 @@ int init_render()
     	return -1;
  	 }
 
-	fprintf(stderr, "boutta load into mem");
 	// load sprites into memory
 	int i;
-	for (i = 0; i < sizeof(filenames); i++) {
-		fprintf(stderr, "loading sprite\n");
+	for (i = 0; i < 9; i++) {
 		sprites[i] = load_sprites(filenames[i], vga_display_fd);
 	}
 	return 0;
