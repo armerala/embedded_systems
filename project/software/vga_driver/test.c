@@ -14,9 +14,9 @@
 
 int vga_display_fd;
 
-void load_pixel(const vga_display_load_arg_t *arg)
+void load_pixel(const vga_display_arg_t *arg)
 {
-	vga_display_write_arg_t vla;
+	vga_display_arg_t vla;
 	vla = *arg;
 	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
 		perror("ioctl for ball position failed");
@@ -24,9 +24,9 @@ void load_pixel(const vga_display_load_arg_t *arg)
 	}
 }
 
-void place_sprite(const vga_display_write_arg_t *arg)
+void place_sprite(const vga_display_arg_t *arg)
 {
-	vga_display_write_arg_t vla;
+	vga_display_arg_t vla;
 	vla = *arg;
 	if (ioctl(vga_display_fd, VGA_DISPLAY_WRITE_SPRITE, &vla)) {
 		perror("ioctl for ball position failed");
@@ -46,16 +46,20 @@ int main()
   }
 
   //load some pixel
-  uint32_t i;
-  vga_display_load_arg_t load_arg;
-  load_arg.pix = 0x00f0f0;
+  unsigned short int i;
+  vga_display_load_t load_arg;
+  vga_display_arg_t arg;
+  load_arg.r = 152;
+  load_arg.g = 99;
+  load_arg.b = 69;
   for(i = 0 ; i < 200000; i++) {
 	  load_arg.addr = i;
-      load_sprite(&load_arg);
+	  arg.load = load_arg;
+      load_pixel(&arg);
   }
 
   //place some sprites (one is flipped)
-  vga_display_render_arg_t vla[2];
+  vga_display_render_t vla[2];
   vla[0].x = 0;
   vla[0].y = 0;
   vla[0].magic = SPRITE_IDLE;
@@ -96,8 +100,10 @@ int main()
 	if (vla[1].y < 6 || vla[1].y > 113)
 			dy1 *= -1;
 
-  	place_sprite(&vla[0]);
-	place_sprite(&vla[1]);
+	arg.render = vla[0];
+  	place_sprite(&arg);
+	arg.render = vla[1];
+	place_sprite(&arg);
 
 
     usleep(20000);
