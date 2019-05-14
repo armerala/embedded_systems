@@ -14,82 +14,7 @@
 `define VGA_WAITING_TO_RENDER 2'b00
 `define VGA_INSTRUCTION_FETCH 2'b00
 `define VGA_RENDERING 2'b10
-
-`define VGA_RENDER_Q_LEN 25
-
-/*****************************
- * IMAGE LOAD DEFINES
- *****************************/
-`define VGA_DO_RENDER (8'hff) //gets placed where image magic normally would be
-
-//magics
-`define SPRITE_MAGIC_IDLE (8'h00)
-`define SPRITE_MAGIC_DUCK (8'h01)
-`define SPRITE_MAGIC_PUNCH (8'h02)
-`define SPRITE_MAGIC_KICK (8'h03)
-`define SPRITE_MAGIC_WALK (8'h04)
-`define SPRITE_MAGIC_DEAD (8'h05)
-`define SPRITE_MAGIC_JUMP (8'h06)
-`define SPRITE_MAGIC_POW (8'h07)
-`define SPRITE_MAGIC_HEART (8'h08)
-
-//flags
-`define SPRITE_FLAG_FLIP_X (8'b 00000001)
-
-//widths
-`define SPRITE_WIDTH_IDLE 123
-`define SPRITE_WIDTH_DUCK 253
-`define SPRITE_WIDTH_PUNCH 329
-`define SPRITE_WIDTH_KICK 282
-`define SPRITE_WIDTH_WALK 170
-`define SPRITE_WIDTH_DEAD 348
-`define SPRITE_WIDTH_JUMP 209
-`define SPRITE_WIDTH_POW 400
-`define SPRITE_WIDTH_HEART 15
-
-//heights
-`define SPRITE_HEIGHT_IDLE 346
-`define SPRITE_HEIGHT_DUCK 300
-`define SPRITE_HEIGHT_PUNCH 340
-`define SPRITE_HEIGHT_KICK 340
-`define SPRITE_HEIGHT_WALK 349
-`define SPRITE_HEIGHT_DEAD 109
-`define SPRITE_HEIGHT_JUMP 268
-`define SPRITE_HEIGHT_POW 288
-`define SPRITE_HEIGHT_HEART 15
-
-//sizes overall
-`define SPRITE_SIZE_IDLE (`SPRITE_WIDTH_IDLE * `SPRITE_HEIGHT_IDLE)
-`define SPRITE_SIZE_DUCK (`SPRITE_WIDTH_DUCK * `SPRITE_HEIGHT_DUCK)
-`define SPRITE_SIZE_PUNCH (`SPRITE_WIDTH_PUNCH * `SPRITE_HEIGHT_PUNCH)
-`define SPRITE_SIZE_KICK (`SPRITE_WIDTH_KICK * `SPRITE_HEIGHT_KICK)
-`define SPRITE_SIZE_WALK (`SPRITE_WIDTH_WALK * `SPRITE_HEIGHT_WALK)
-`define SPRITE_SIZE_DEAD (`SPRITE_WIDTH_DEAD * `SPRITE_HEIGHT_DEAD)
-`define SPRITE_SIZE_JUMP (`SPRITE_WIDTH_JUMP * `SPRITE_HEIGHT_JUMP)
-`define SPRITE_SIZE_POW (`SPRITE_WIDTH_POW * `SPRITE_HEIGHT_POW)
-`define SPRITE_SIZE_HEART (`SPRITE_WIDTH_HEART * `SPRITE_HEIGHT_HEART)
-
-`define SPRITE_TOTAL_PIXELS \
-	(`SPRITE_SIZE_IDLE + \
-	 `SPRITE_SIZE_DUCK + \
-	`SPRITE_SIZE_PUNCH + \
-	`SPRITE_SIZE_KICK + \
-	`SPRITE_SIZE_WALK + \
-	`SPRITE_SIZE_DEAD +	\
-	`SPRITE_SIZE_JUMP + \
-	`SPRITE_SIZE_POW + \
-	`SPRITE_SIZE_HEART)
-
-//mem offsets
-`define SPRITE_OFFSET_IDLE (16'd 0)
-`define SPRITE_OFFSET_DUCK (`SPRITE_OFFSET_IDLE + `SPRITE_SIZE_IDLE)
-`define SPRITE_OFFSET_PUNCH (`SPRITE_OFFSET_DUCK + `SPRITE_SIZE_DUCK)
-`define SPRITE_OFFSET_KICK (`SPRITE_OFFSET_PUNCH + `SPRITE_SIZE_PUNCH)
-`define SPRITE_OFFSET_WALK (`SPRITE_OFFSET_KICK + `SPRITE_SIZE_KICK)
-`define SPRITE_OFFSET_DEAD (`SPRITE_OFFSET_WALK + `SPRITE_SIZE_WALK)
-`define SPRITE_OFFSET_JUMP (`SPRITE_OFFSET_DEAD + `SPRITE_SIZE_DEAD)
-`define SPRITE_OFFSET_POW (`SPRITE_OFFSET_JUMP + `SPRITE_SIZE_JUMP)
-`define SPRITE_OFFSET_HEART (`SPRITE_OFFSET_POW + `SPRITE_SIZE_POW)
+`include "common.sv"
 
 
 /*********************
@@ -104,7 +29,7 @@ module vga_display(
 	output reg render_queue_pop_front,
 
 	input [23:0] pixel_din,
-    output reg [14:0] pixel_addr,
+    output reg [$clog2(`SPRITE_TOTAL_PIXELS)-1:0] pixel_addr,
 
 	output [7:0] VGA_R,
 	output [7:0] VGA_G,
@@ -185,10 +110,11 @@ module vga_display(
 	//write on negedge when data is available
 	always @(negedge clk50, posedge reset) begin
 
-		if(reset)
+		if(reset) begin
             img_magic <= 0;
             render_queue_pop_front <= 1'b0;
 			next_state <= `VGA_INSTRUCTION_FETCH;
+		end
 		else begin
 
             //this assign sucks but fine

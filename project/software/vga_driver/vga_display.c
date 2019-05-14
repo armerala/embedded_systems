@@ -40,6 +40,15 @@
 #define DRIVER_NAME "fpga"
 
 /* Device registers (little endian) */
+#define PIX(x) (x)
+#define PIX2(x) (x+1)
+#define PIX3(x) (x+2)
+#define ADDR1(x) ((x)+3)
+#define ADDR2(x) ((x)+4)
+#define ADDR3(x) ((x)+5)
+
+
+/* Device registers (little endian) */
 #define MAGIC(x) (x)
 #define POS_X1(x) (x+1)
 #define POS_X2(x) (x+2)
@@ -53,10 +62,21 @@
 struct vga_dev {
 	struct resource res; /* Resource: our registers */
 	void __iomem *virtbase; /* Where registers can be accessed in memory */
-	vga_display_arg_t arg;
+	vga_display_render_arg_t arg;
 } dev;
 
-static void write_sprite(vga_display_arg_t *arg)
+static void write_sprite(vga_display_render_arg_t *arg)
+{
+	iowrite8(arg->pix, PIX1(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->pix)+1), PIX2(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->pix)+2), PIX3(dev.virtbase) );
+	iowrite8(arg->addr, ADDR1(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->addr)+1), ADDR2(dev.virtbase) );
+	iowrite8(*((uint8_t*)(&arg->addr)+2), ADDR3(dev.virtbase) );
+	dev.arg = *arg;
+}
+
+static void load_sprite(vga_display_load_arg_t *arg)
 {
 	iowrite8(arg->magic, MAGIC(dev.virtbase) );
 	iowrite8(arg->x, POS_X1(dev.virtbase) );
@@ -74,14 +94,21 @@ static void write_sprite(vga_display_arg_t *arg)
  */
 static long vga_display_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
-	vga_display_arg_t vla;
+	vga_display_render_arg_t vla;
 
 	switch (cmd) {
 	case VGA_DISPLAY_WRITE_SPRITE:
-		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
-				   sizeof(vga_display_arg_t)))
+		if (copy_from_user(&vla, (vga_display_render_arg_t *) arg,
+				   sizeof(vga_display_render_arg_t)))
 			return -EACCES;
 		write_sprite(&vla);
+		break;
+
+	case VGA_DISPLAY_LOAD_SPRITE:
+		if (copy_from_user(&vla, (vga_display_load_arg_t *) arg,
+				   sizeof(vga_display_load_arg_t)))
+			return -EACCES;
+		load_sprite(&vla);
 		break;
 
 	default:

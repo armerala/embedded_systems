@@ -1,5 +1,4 @@
-#ifndef _VGA_DISPLAY_H
-#define _VGA_DISPLAY_H
+#ifndef _VGA_DISPLAY_H #define _VGA_DISPLAY_H
 
 #include <linux/ioctl.h>
 #include <linux/types.h>
@@ -22,16 +21,21 @@
 #define SPRITE_POW 7
 #define SPRITE_HEART 8
 
+typedef struct {
+	uint32_t pix;
+	uint32_t addr;
+} vga_display_load_arg__t;
 
 typedef struct {
 	char magic;
 	unsigned short int x;
 	unsigned short int y;
 	char flags;
-} vga_display_arg_t;
+} vga_display_render_arg_t;
 
 /* ioctls and their arguments */
-#define VGA_DISPLAY_WRITE_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_arg_t *)
+#define VGA_DISPLAY_WRITE_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_render_arg_t *)
+#define VGA_DISPLAY_LOAD_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_load_arg_t *)
 
 
 #endif

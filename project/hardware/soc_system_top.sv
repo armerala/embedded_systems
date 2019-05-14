@@ -276,18 +276,6 @@ module soc_system_top(
 	 .vga_vs (VGA_VS),
 	 .vga_blank_n (VGA_BLANK_N),
 	 .vga_sync_n (VGA_SYNC_N),
-
-	.sdram_dq(DRAM_DQ),
-	.sdram_a(DRAM_ADDR),
-	.sdram_ba(DRAM_BA),
-	.sdram_we_n(DRAM_WE_N),
-	.sdram_udqm(DRAM_UDQM),
-	.sdram_ldqm(DRAM_LDQM),
-	.sdram_ras_n(DRAM_RAS_N),
-	.sdram_cas_n(DRAM_CAS_N),
-	.sdram_cs_n(DRAM_CS_N),
-	.sdram_cke(DRAM_CKE),
-	.pll_0_sdram_clk(DRAM_CLK),
   );
 
    // The following quiet the "no driver" warnings for output
@@ -303,13 +291,11 @@ module soc_system_top(
    assign AUD_DACLRCK = SW[1] ? SW[0] : 1'bZ;
    assign AUD_XCK = SW[0];      
 
-	/*
    assign DRAM_ADDR = { 13{ SW[0] } };
    assign DRAM_BA = { 2{ SW[0] } };
    assign DRAM_DQ = SW[1] ? { 16{ SW[0] } } : 16'bZ;
    assign {DRAM_CAS_N, DRAM_CKE, DRAM_CLK, DRAM_CS_N,
 	   DRAM_LDQM, DRAM_RAS_N, DRAM_UDQM, DRAM_WE_N} = { 8{SW[0]} };
-	*/
 
    assign FAN_CTRL = SW[0];
 
