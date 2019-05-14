@@ -95,7 +95,7 @@ struct sprite *read_and_load(const char *filename, int vga_display_fd)
 	sprite->width = ih.biWidth;
 	sprite->height = ih.biHeight; 
 	
-	data_size = ih.biWidth * ih.biHeight * 24;
+	data_size = ih.biWidth * ih.biHeight * 3;
 	
 	pixel_data = malloc(data_size);
 	fprintf(stderr, "malloc'd %d for pixel data\n", data_size);
