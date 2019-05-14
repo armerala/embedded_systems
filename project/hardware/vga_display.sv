@@ -283,9 +283,9 @@ module vga_display(
 	vga_counters counters(.clk50(clk50),.*);
 
 	//assign final output
-    assign VGA_R[7:0] = (~VGA_BLANK_n) ? 8'h01 : 8'hff ;
-    assign VGA_G[7:0] = (~VGA_BLANK_n) ? 8'h01 : 8'h01 ;
-    assign VGA_B[7:0] = (~VGA_BLANK_n) ? 8'hff : 8'h01 ;
+    assign VGA_R[7:0] = (~VGA_BLANK_n) ? 8'h01 : read_buf_dout[23:16];
+    assign VGA_G[7:0] = (~VGA_BLANK_n) ? 8'h01 : read_buf_dout[15:8];
+    assign VGA_B[7:0] = (~VGA_BLANK_n) ? 8'hff : read_buf_dout[7:0];
     //{read_buf_dout[23:16], read_buf_dout[15:8], read_buf_dout[7:0]};
     /*
 	always_comb begin
