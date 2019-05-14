@@ -11,8 +11,8 @@ int init_scene()
 {
     struct scene_object* ps1 = player_instantiate(1);
     struct scene_object* ps2 = player_instantiate(0);
-	ps1->pos = (struct vec2){10, 100};
-	ps2->pos = (struct vec2){100, 100};
+	ps1->pos = (struct vec2){10.0, 100.0};
+	ps2->pos = (struct vec2){110.0, 100.0};
 
 	if(!ps1 || !ps2)
 		return -1;

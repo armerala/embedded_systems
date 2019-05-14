@@ -1,5 +1,5 @@
 CC=gcc
-LDFLAGS=-pthread `sdl2-config --cflags --libs`
+LDFLAGS=-pthread `sdl2-config --cflags --libs` -lm
 CFLAGS = -c -g -Wall
 
 OBJS=main.o input.o scene.o render.o state.o sprite_loader.o

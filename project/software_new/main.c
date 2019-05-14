@@ -13,7 +13,6 @@ static void sig_term_handler(int sig_num)
 {
 	fprintf(stderr, "CTRL-C caught - press a joystick button to quit\n");
 	game_done = 1;
-	exit(1);
 }
 
 int main()
@@ -33,8 +32,7 @@ int main()
     /*the big init*/
 	int err;
 
-err = 0;
-//	err = init_input();
+	err = init_input();
 	err = init_scene() | err;
 	err = init_render() | err;
 	
@@ -54,6 +52,6 @@ err = 0;
 
 	shutdown_scene();
 	shutdown_input();
-	shutdown_render();
+//	shutdown_render();
     return 0;
 }
