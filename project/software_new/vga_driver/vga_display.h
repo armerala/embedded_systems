@@ -59,11 +59,14 @@ typedef struct {
 
 extern void write_sprite(vga_display_render_t *arg);
 extern void load_sprite(vga_display_load_t *arg);
+extern void write_pixel(vga_display_pixel_t *arg);
+
 
 /* ioctls and their arguments */
 #define VGA_DISPLAY_WRITE_SPRITE _IOW(VGA_DISPLAY_MAGIC, 1, vga_display_arg_t *)
 #define VGA_DISPLAY_LOAD_PIXEL _IOW(VGA_DISPLAY_MAGIC, 2, vga_display_arg_t *)
 
+#define VGA_DISPLAY_WRITE_PIXEL _IOW(VGA_DISPLAY_MAGIC, 3, vga_display_arg_t *)
 
 
 #endif

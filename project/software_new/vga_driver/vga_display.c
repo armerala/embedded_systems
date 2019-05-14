@@ -37,7 +37,7 @@
 
 #include "vga_display.h"
 
-#define DRIVER_NAME "fpga"
+#define DRIVER_NAME "vga_display"
 
 
 // device registers
@@ -60,16 +60,16 @@ struct vga_dev {
 } dev;
 
 
-void write_pixels(vga_display_pixel_t *arg)
+void write_pixel(vga_display_pixel_t *arg)
 {
 	iowrite8(arg->r, R(dev.virtbase));
 	iowrite8(arg->g, G(dev.virtbase));
 	iowrite8(arg->b, B(dev.virtbase));
 	iowrite8(arg->pos_x, POS_X(dev.virtbase));
 	iowrite8(arg->pos_y, POS_Y(dev.virtbase));
-	dev.pixel = *pixel;
+	dev.pixel = *arg;
 }
-
+/*
 
 void write_sprite(vga_display_render_t *arg)
 {
@@ -94,6 +94,7 @@ void load_pixel(vga_display_load_t *arg)
 	dev.load = *arg;
 }
 
+*/
 /*
  * Handle ioctl() calls from userspace:
  * Read or write the segments on single digits.
@@ -104,7 +105,7 @@ static long vga_display_ioctl(struct file *f, unsigned int cmd, unsigned long ar
 	vga_display_arg_t vla;
 
 	switch (cmd) {
-	case VGA_DISPLAY_WRITE_SPRITE:
+/*	case VGA_DISPLAY_WRITE_SPRITE:
 		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
 				   sizeof(vga_display_arg_t)))
 			return -EACCES;
@@ -117,7 +118,7 @@ static long vga_display_ioctl(struct file *f, unsigned int cmd, unsigned long ar
 			return -EACCES;
 		load_pixel(&(vla.load));
 		break;
-
+*/
 	case VGA_DISPLAY_WRITE_PIXEL:
 		if (copy_from_user(&vla, (vga_display_arg_t *) arg,
 				   sizeof(vga_display_arg_t)))
@@ -198,7 +199,7 @@ static int vga_display_remove(struct platform_device *pdev)
 /* Which "compatible" string(s) to search for in the Device Tree */
 #ifdef CONFIG_OF
 static const struct of_device_id vga_display_of_match[] = {
-	{ .compatible = "csee4840,fpga-1.0" },
+	{ .compatible = "csee4840,vga_display-1.0" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, vga_display_of_match);
