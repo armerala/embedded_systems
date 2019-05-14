@@ -29,8 +29,8 @@ typedef struct {
 	unsigned char p1_y;
 	unsigned char p2_x;
 	unsigned char p2_y;
-	unsigned char p1_health;
-	unsigned char p2_health;
+	char p1_health;
+	char p2_health;
 } vga_display_arg_t;
 
 

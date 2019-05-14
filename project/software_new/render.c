@@ -133,5 +133,7 @@ void __do_render(struct scene_object *obj)
 
 	call_vga(&arg);
 
+	printf("SENT:\np1x:%d\np1y:%d\np2x:%d\np2y:%d\np1h:%d\np2h:%d\n\n\n",
+		arg.p1_x, arg.p1_y, arg.p2_x, arg.p2_y, arg.p1_health, arg.p2_health);
 
 }
