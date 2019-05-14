@@ -94,20 +94,24 @@ module fpga_top_level(
 	reg [7:0] current_op;
 
 	//do business on negedge b/c memory clocks on posedge
-	always @(negedge clk50, posedge reset) begin
+	always @(negedge clk50, posedge reset, posedge do_clear) begin
 
 		//reset internal signals
-		if(vga_render_q_we)
+		if(reset) begin
 			vga_render_q_we <= 1'b0;
-		if(image_mem_we)
 			image_mem_we <= 1'b0;
-		if(~use_image_read_addr)
 			use_image_read_addr <= 1'b1;
-		if(do_clear)
 			do_clear <= 1'b0;
-
+		end
+		else if(do_clear) begin
+			vga_render_q_we <= 1'b0;
+			image_mem_we <= 1'b0;
+			use_image_read_addr <= 1'b1;
+			do_clear <= 1'b0;
+		end
+		
 		//figure out what to do
-		if(hps_write && hps_chipselect) begin
+		else if(hps_write && hps_chipselect) begin
 			
 			//cache the current op from first 8 bits
 			if(hps_address == 3'h0) begin
