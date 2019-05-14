@@ -124,7 +124,7 @@ void player_update(struct scene_object* player_obj)
 		player_obj->sd->magic = IDLE;
 
 
-	if ((other->pos.x + 3) >= player_obj->pos.x && (other->pos.x - 3) <= player_obj->pos.x  ) {
+	if ((other->pos.x + 7) >= player_obj->pos.x && (other->pos.x - 7) <= player_obj->pos.x  ) {
 		if (b1down || b2down) {
 			other_state->health--;
 //			printf("took a hit!\n");
