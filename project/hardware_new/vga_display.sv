@@ -44,8 +44,6 @@ module vga_display(input logic        clk,
        endcase
 
    always_comb begin
-     {VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
-      if (VGA_BLANK_n )
 	if ((hcount[10:3] == pos_x) && (vcount[9:2] == pos_y))
 	  {VGA_R, VGA_G, VGA_B} = {r,g,b};
 	else
