@@ -108,12 +108,14 @@ int main()
   for ( ;; )
   {
 	
-
+	pixel.pos_x += dx0;
+	pixel.pos_y += dy0;
 
 	if (pixel.pos_x < 6 || pixel.pos_x > 136)
 			dx0 *= -1;
 	if (pixel.pos_y < 6 || pixel.pos_y > 113)
 			dy0 *= -1;
+
 
 /*
 	if (vla[1].x < 6 || vla[1].x > 136)
@@ -122,10 +124,11 @@ int main()
 			dy1 *= -1;
 */
 
+	arg.pixel = pixel;
 	write_pixels(&arg);	
 	
 
-    usleep(20000);
+    //usleep(20000);
 
   }
 
