@@ -52,7 +52,7 @@ module fpga_top_level(
 
 	//instance vga buffer
 	wire vga_render_q_pop_front;
-	wire vga_render_q_dout;
+	wire [47:0] vga_render_q_dout;
 	reg vga_render_q_we;
 	reg [47:0] vga_render_q_din;
 	
@@ -63,8 +63,8 @@ module fpga_top_level(
 		.pop_front(vga_render_q_pop_front),
 		.din(vga_render_q_din),
 		.dout(vga_render_q_dout),
-		.hw(),
-		.lw()
+		.buf_hw(),
+		.buf_lw()
 	);
 	defparam vga_render_q.read_word_size = 48;
 	defparam vga_render_q.write_word_size = 48;
